@@ -1,0 +1,32 @@
+# Generated outputs
+shoe_last.stl
+shoe_last.step
+
+# FreeCAD project files (large binary)
+*.FCStd
+*.FCBak
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Local backup directories
+zBack/
+zTemp/
+zTrash/
+
+# FreeCAD user config (machine-specific)
+system.cfg
+user.cfg
+
+# Scratch / temp files
+temp.txt
+ana_out.txt
+
+# Editor swap files
+*.swp
+*.swo
+
+# Claude Code session data
+.claude/

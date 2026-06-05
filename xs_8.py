@@ -10,11 +10,12 @@ import last_insole
 import last_profile
 import xs_base
 
-importlib.reload(hf)
-importlib.reload(last_insole)
-importlib.reload(last_profile)
-importlib.reload(xs_base)
-
+if False:
+    importlib.reload(hf)
+    importlib.reload(last_insole)
+    importlib.reload(last_profile)
+    importlib.reload(xs_base)
+    
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
 doc_name    = "ScriptModel"

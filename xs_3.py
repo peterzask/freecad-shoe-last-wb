@@ -10,11 +10,12 @@ import last_insole
 import last_profile
 import xs_base
 
-importlib.reload(hf)
-#testing off, Turn on
-#importlib.reload(last_insole)
-importlib.reload(last_profile)
-importlib.reload(xs_base)
+if False:
+    importlib.reload(hf)
+    #testing off, Turn on
+    #importlib.reload(last_insole)
+    importlib.reload(last_profile)
+    importlib.reload(xs_base)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
@@ -64,13 +65,13 @@ class xs_3_lens_c:
 
         # HT1/HT2 from medial/lateral highwater BSpline intersections
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in profile_dwg.medial_highwate_bc.getPoles()]
+                    for p in profile_dwg.medial_highwater_bc.getPoles()]
         med_hw_3d = Part.BSplineCurve()
         med_hw_3d.buildFromPolesMultsKnots(
             poles_3d,
-            profile_dwg.medial_highwate_bc.getMultiplicities(),
-            profile_dwg.medial_highwate_bc.getKnots(),
-            False, profile_dwg.medial_highwate_bc.Degree)
+            profile_dwg.medial_highwater_bc.getMultiplicities(),
+            profile_dwg.medial_highwater_bc.getKnots(),
+            False, profile_dwg.medial_highwater_bc.Degree)
         g_T1_pts = hf.get_bspline_plane_intersection_new(
             med_hw_3d,
             xs_base.xs_3_placement.Base,

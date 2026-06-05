@@ -89,6 +89,7 @@ def Doc_Sketch(doc_name: str, sketch_name: str):
 # edges = []
 # edges.append(bspline.toShape())
 # arc_length_edges(edges)
+doc_name = "ScriptModel"
 def arc_length_edges(edge_list = []):
     lSum = 0
     #edges = FreeCADGui.Selection.getSelectionEx()[0].SubObjects

@@ -1,5 +1,3 @@
-
-#!/usr/bin/python3
 import math
 import copy
 import FreeCAD as App
@@ -12,6 +10,7 @@ import inspect
 from dataclasses import dataclass
 import importlib
 import helper_funcs as hf
+import shape_params as sp
 importlib.reload(hf)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
@@ -19,7 +18,7 @@ print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})
 
 @dataclass
 class foot_c:
-    fl: float = 0.0
+    foot_len: float = 0.0
     joint: float = 0.0
     waist: float = 0.0
     instep: float = 0.0
@@ -27,9 +26,9 @@ class foot_c:
     heel: float = 0.0  #heel girth
     heel_height: float = 0.0
     ankle: float = 0.0
-    def __init__(self, fl, joint, waist, instep, 
+    def __init__(self, foot_len, joint, waist, instep,
                  h_instep, heel, heel_height, ankle):
-        self.fl = fl
+        self.foot_len = foot_len
         self.joint = joint
         self.waist = waist
         self.instep = instep
@@ -40,7 +39,7 @@ class foot_c:
 
     def print_(self):
         print("foot_c\n",
-              "fl       (%10.4f)\n"%self.fl,
+              "foot_len       (%10.4f)\n"%self.foot_len,
               "joint    (%10.4f)\n"%self.joint,
               "waist    (%10.4f)\n"%self.waist,
               "instep   (%10.4f)\n"%self.instep,
@@ -57,9 +56,9 @@ class insole_len_c:
     def __init__(self,  ft_meas: foot_c):
         print(ft_meas)
         print("Here")
-        print(ft_meas.fl)
-        self.AB = ft_meas.fl
-        self.CJ = ft_meas.fl * 2.0 / 3.0
+        print(ft_meas.foot_len)
+        self.AB = ft_meas.foot_len
+        self.CJ = ft_meas.foot_len * 2.0 / 3.0
         self.JJ1 = ft_meas.joint / 6.0
         self.JJ2 = ft_meas.joint / 6.0 + 10.0
         self.AH = self.AB / 5.0
@@ -80,7 +79,6 @@ class insole_len_c:
               "H3K     = %10.4f\n"%self.H3K)
 
 
-@dataclass
 class insole_layout:
     def build(self, insole_len_c, sketch_insole:"Sketcher::Sketch_Object"):
         self.A = App.Vector(0,0,0)
@@ -154,20 +152,19 @@ class insole_layout:
         V0 = np.array([P0.x,P0.y,P0.z])
         V1 = np.array([P1.x,P1.y,P1.z])
         self.K = App.Vector(*(V0 + V1*t_result))
-        #sketch_insole.addGeometry(Part.Circle(self.K, hf.nZ, 2.0))
 
     def draw_last_outline(self, sketch):
         lateral_K = (self.J2 + self.H2 + App.Vector(0,10,0)) * 0.5
         lateral_K.y = lateral_K.y*0.95
         medial_K = self.K*1.0
         medial_K.y *= 1.8
-        C0 = self.C + App.Vector(-5,0,0)  # change naming to follow right hand rule thumb up in z-direction
+        C0 = self.C + App.Vector(-5,0,0)
         H1_temp = self.H1*1.0 + App.Vector(0,2,0)
         H2_temp = self.H2*1.0 + App.Vector(0,-2,0)
         B1_temp = self.B1*1.0 + App.Vector(1,1,0)
         B2_temp = self.B2*1.0 + App.Vector(1,-1,0)
         D_temp =  self.D *1.0 + App.Vector(2,0,0)
-        C2 = self.C + App.Vector(0,5+17,0)  # change to follow right hand rule thumb up in z-direction
+        C2 = self.C + App.Vector(0,5+17,0)
         C3 = self.C + App.Vector(0,-5-17,0)
         pinky_pt = self.B2*1.0 + (self.J2-self.B2)/2 + App.Vector(0,-8,0)
         sketch.addGeometry(Part.Circle(pinky_pt,hf.nZ,2))
@@ -175,25 +172,20 @@ class insole_layout:
                  D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
         bc = Part.BSplineCurve()
         bc.buildFromPoles(poles, False, 2, False)
-        #sketch.addGeometry(bc)
-        # bc is by default in global coordinates 
 
-        bc_medial_last_outline_poles= [C0, C2, H1_temp, medial_K, self.J1, B1_temp,
-                 D_temp] #, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
+        bc_medial_last_outline_poles= [C0, C2, H1_temp, medial_K, self.J1, B1_temp, D_temp]
         self.bc_medial_last_outline = Part.BSplineCurve()
         self.bc_medial_last_outline.buildFromPoles(bc_medial_last_outline_poles, False, 2, False)
         sketch.addGeometry(self.bc_medial_last_outline)
 
-        bc_lateral_last_outline_poles = [#C0, C2, H1_temp, medial_K, self.J1, B1_temp,
-                 D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
+        bc_lateral_last_outline_poles = [D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
         self.bc_lateral_last_outline = Part.BSplineCurve()
         self.bc_lateral_last_outline.buildFromPoles(bc_lateral_last_outline_poles, False, 2, False)
         sketch.addGeometry(self.bc_lateral_last_outline)
-        
 
         return bc
 
-    def draw_insole_outline(self, sketch, crown_fraction=0.3):
+    def draw_insole_outline(self, sketch, ft_meas, shape_p):
         extra_point_K = (self.J2 + self.H2 + App.Vector(0,20,0)) * 0.5
         K2 = self.K + App.Vector(0,-5,0)
         C2 = self.C + App.Vector(5,5+15,0)
@@ -209,73 +201,43 @@ class insole_layout:
         self.insole_bc_medial.buildFromPoles(poles_medial, False, 2, False)
         sketch.addGeometry(self.insole_bc_medial)
 
-        poles_lateral = [self.D,self.B2, self.J2, extra_point_K, self.H2, C3, self.C]
+        poles_lateral = [self.D, self.B2, self.J2, extra_point_K, self.H2, C3, self.C]
         self.insole_bc_lateral = Part.BSplineCurve()
         self.insole_bc_lateral.buildFromPoles(poles_lateral, False, 2, False)
         sketch.addGeometry(self.insole_bc_lateral)
 
-        # C1/C2 crown contour curves: same pole x-positions as insole outline,
-        # y-values scaled by crown_fraction.  Tune crown_fraction at the call site.
-        # Calculate distance x from C that last crown H should be at,
-        # the problem is it's a more complicated calcution to be updated
-        # after seeing if this works
         cosd = math.cos(37.0*math.pi/180.0)
-        insole_Crown = App.Vector(ft_measurements.heel*.9/2*cosd-10,0,0) 
+        insole_Crown = App.Vector(ft_meas.heel*.9/2*cosd-10, 0, 0)
         _ic = insole_Crown
         print(f"heel*.45 = {insole_Crown.x}")
-        sketch.addGeometry(Part.Circle(insole_Crown,hf.nZ,4))
-        #C1 is medial side, points are heel to toe
-        #_cf = crown_fraction
-        _cf = 0.7 #crown_fraction
+        sketch.addGeometry(Part.Circle(insole_Crown, hf.nZ, 4))
+
+        _cf = shape_p.insole_crown_med_cf
         poles_c1 = [
-            App.Vector(self.C.x,         0,                      0),
-            App.Vector(C2.x,              12.5,             0),
-#            App.Vector(C2.x,             C2.y * _cf,             0),
-            App.Vector(self.H1.x,         12.5,        0),
-#            App.Vector(self.H1.x,        self.H1.y * _cf,        0),
-#            App.Vector(K2.x,             K2.y  * _cf,            0),
-            App.Vector(_ic.x,             12.5  ,            0),
-            #App.Vector(_ic.x,             0  ,            0),
-            #App.Vector(K2.x,             12.5  ,            0),
-            #App.Vector(K2.x,             0  ,            0),
-            App.Vector(self.J1.x-20,        self.J1.y*_cf ,        0),
-            App.Vector(self.J1.x+10,        self.J1.y*_cf ,        0),
-            App.Vector(self.B1.x,        self.B1.y*_cf  ,        0),
-            App.Vector(self.D.x,         0,                      0),
+            App.Vector(self.C.x,         0,           0),
+            App.Vector(C2.x,             12.5,        0),
+            App.Vector(self.H1.x,        12.5,        0),
+            App.Vector(_ic.x,            12.5,        0),
+            App.Vector(self.J1.x-20,     self.J1.y*_cf, 0),
+            App.Vector(self.J1.x+10,     self.J1.y*_cf, 0),
+            App.Vector(self.B1.x,        self.B1.y*_cf, 0),
+            App.Vector(self.D.x,         0,           0),
         ]
-        #for q in poles_c1:
-        #    sketch.addGeometry(Part.Circle(q+App.Vector(0,00,0),hf.nZ,4))
         self.C1_insole_medial = Part.BSplineCurve()
         self.C1_insole_medial.buildFromPoles(poles_c1, False, 2, False)
         sketch.addGeometry(self.C1_insole_medial)
-        #C2 is lateral side, points are toe to heel
-        _cf = 0.5
+
+        _cf = shape_p.insole_crown_lat_cf
         poles_c2 = [
-#            App.Vector(self.D.x,         0,                      0),
-            App.Vector(self.D.x,         0,                      0),
-#            App.Vector(self.B2.x,        self.B2.y * _cf,        0),
-            App.Vector(self.B2.x,        self.B2.y*_cf,        0),
-#            App.Vector(self.J2.x,        self.J2.y * _cf,        0),
-            App.Vector(self.J2.x+10,        self.J2.y *_cf,        0),
-#            App.Vector(extra_point_K.x,  extra_point_K.y * _cf,  0),
-#new pole
-            App.Vector(self.J2.x-10,self.J2.y*_cf,0),
-            #App.Vector(_temp.x,_temp.y,        0),
-#end new pole
-#            App.Vector(extra_point_K.x,  0,  0),
-            #App.Vector(_ic.x,  0,  0),
-#            App.Vector(extra_point_K.x,  -12.5,  0),
-            App.Vector(_ic.x,  -12.5,  0),
-            #App.Vector(self.H2.x,        self.H2.y * _cf,        0),
-            App.Vector(self.H2.x,        -12.5,        0),
-            #App.Vector(C3.x,             C3.y * _cf,             0),
-            App.Vector(C3.x,             -12.5,             0),
-            App.Vector(self.C.x,         0,                      0),
+            App.Vector(self.D.x,         0,                0),
+            App.Vector(self.B2.x,        self.B2.y*_cf,    0),
+            App.Vector(self.J2.x+10,     self.J2.y*_cf,    0),
+            App.Vector(self.J2.x-10,     self.J2.y*_cf,    0),
+            App.Vector(_ic.x,            -12.5,            0),
+            App.Vector(self.H2.x,        -12.5,            0),
+            App.Vector(C3.x,             -12.5,            0),
+            App.Vector(self.C.x,         0,                0),
         ]
-        #sketch.addGeometry(Part.Circle(extra_point_K,hf.nZ,8))
-        #sketch.addGeometry(Part.Circle(_temp,hf.nZ,18))
-        #for q in poles_c1:
-        #    sketch.addGeometry(Part.Circle(q+App.Vector(0,-30,0),hf.nZ,4))
         self.C2_insole_lateral = Part.BSplineCurve()
         self.C2_insole_lateral.buildFromPoles(poles_c2, False, 2, False)
         sketch.addGeometry(self.C2_insole_lateral)
@@ -283,25 +245,6 @@ class insole_layout:
         return bc
 
     def print_(self):
-        """      one = False
-        if(False):
-            print("\nA",self.A,
-            "\nB",self.B,
-            "\nB1",self.B1,
-            "\nB2",self.B2,
-            "\nC",self.C,
-            "\nD",self.D,
-            "\nJ",self.J,
-            "\nJ1",self.J1,
-            "\nJ2",self.J2,
-            "\nK",self.K,
-            "\nH",self.H,
-            "\nH1",self.H1,
-            "\nH2",self.H2,
-            "\nH3",self.H3,
-            "\nH4",self.H4,
-            "\nO" ,self.O)
-            else:"""
         print(f"last_insole.insole_dwg.")
         hf.p_vec(self.A,"A ")
         hf.p_vec(self.B,"B ")
@@ -339,98 +282,68 @@ class insole_layout:
         sketch_insole.addGeometry(Part.Circle(self.O,  hf.nZ, 2.0))
 
 
-# --- Document and sketch ---
-doc_name = "ScriptModel"
+# --- Document and sketch names ---
+doc_name    = "ScriptModel"
 sketch_name = "Sketch_Insole"
-doc, sketch_insole = hf.Doc_Sketch(doc_name, sketch_name)
-doc.recompute()
 
-# --- Measurements ---
-ft_measurements = foot_c(fl=(11+1/8)*25.4,
-            joint=25.4*11,
-            waist=25.4*9.5,
-            instep=25.4*9.75,
-            h_instep=25.4*10.5,
-            heel=25.4*(13.5-.5),
-            heel_height=25.4*1.5,
-            ankle=25.4*10)
-#ft_measurements.print_()
+# Module-level handles — set by build(), used by last_profile and xs_base
+doc             = None
+sketch_insole   = None
+ft_measurements = None
+insole_lens     = None
+insole_dwg      = None
+outline_bc      = None   # used by xs_0, xs_1, xs_3
 
 
-# --- Build and draw ---
-insole_lens = insole_len_c(ft_measurements)
-#insole_lens.print_()
-insole_dwg = insole_layout()
-insole_dwg.build(insole_lens, sketch_insole)
-outline_bc =insole_dwg.draw_insole_outline(sketch_insole)
-last_outline_bc = insole_dwg.draw_last_outline(sketch_insole)
-insole_dwg.draw_vertex_circles(sketch_insole)
-#insole_dwg.print_()
-#sketch_insole.addGeometry(Part.Circle(App.Vector(0,0,0),hf.nZ,5))
-#print(f"insole_dwg.C ({insole_dwg.C})")
+def build():
+    global doc, sketch_insole, ft_measurements, insole_lens, insole_dwg, outline_bc
+    importlib.reload(sp)
 
-view = FreeCADGui.ActiveDocument.ActiveView
-view.viewTop()
-view.fitAll()
-doc.recompute()
+    doc, sketch_insole = hf.Doc_Sketch(doc_name, sketch_name)
+    doc.recompute()
+
+    import foot_meas_data as fmd
+    importlib.reload(fmd)
+    try:
+        import meas_sheet as MS
+        importlib.reload(MS)
+        _raw = MS.load_foot_measurements(doc)
+        MS.validate_measurements(_raw)
+    except Exception as _e:
+        print(f"last_insole: spreadsheet load failed ({_e}), using defaults.")
+        _raw = fmd.foot_meas_raw()
+
+    ft_measurements = foot_c(
+        foot_len    = _raw.foot_len,
+        joint       = _raw.joint,
+        waist       = _raw.waist,
+        instep      = _raw.instep,
+        h_instep    = _raw.h_instep,
+        heel        = _raw.heel,
+        heel_height = _raw.heel_height,
+        ankle       = _raw.ankle,
+    )
+    ft_measurements.print_()
+
+    insole_lens = insole_len_c(ft_measurements)
+    insole_dwg  = insole_layout()
+    insole_dwg.build(insole_lens, sketch_insole)
+    outline_bc = insole_dwg.draw_insole_outline(sketch_insole, ft_measurements, sp.shape_params)
+    insole_dwg.draw_last_outline(sketch_insole)
+    insole_dwg.draw_vertex_circles(sketch_insole)
 
 
-
+build()
 
 
 def main():
-
-    insole_dwg.print_(); 
-    
+    insole_dwg.print_()
+    view = FreeCADGui.ActiveDocument.ActiveView
+    if view and hasattr(view, 'viewTop'):
+        view.viewTop()
+        view.fitAll()
+    doc.recompute()
     print("End of last_insole.py")
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-#dead code
-
-    # Parameters: (String, FontPath, Height, Tracking)
-    #shapeString= Draft.makeShapeString("Hello World", 
-    #                                   "/usr/share/fonts/truetype//dejavu//DejaVuSans.ttf",
-    #                                   5.0)
-    #
-    #extrude_obj = App.ActiveDocument.addObject("Part::Feature", "ExtrudeText")
-    #print(f"type shapeString {type(shapeString)}")
-    #print(f"type extrude_obj {type(extrude_obj)}")
-    #toShape(shapeString)
-    #
-    ##extrude_obj.Base = shapeString
-    ##extrude_obj.Dir = App.Vector(0,0,5)
-    ##extrude_obj.Solid = True
-    #App.ActiveDocument.recompute()
-    """
-        poles_c2 = [
-#            App.Vector(self.D.x,         0,                      0),
-            App.Vector(self.D.x-5,         0,                      0),
-#            App.Vector(self.B2.x,        self.B2.y * _cf,        0),
-            App.Vector(self.B2.x,        self.B2.y,        0),
-#            App.Vector(self.J2.x,        self.J2.y * _cf,        0),
-            App.Vector(self.J2.x,        self.J2.y ,        0),
-#            App.Vector(extra_point_K.x,  extra_point_K.y * _cf,  0),
-#new pole
-            #App.Vector(_temp.x,_temp.y,        0),
-#end new pole
-            App.Vector(extra_point_K.x,  0,  0),
-            App.Vector(extra_point_K.x,  -12.5,  0),
-            #App.Vector(self.H2.x,        self.H2.y * _cf,        0),
-            App.Vector(self.H2.x,        -12.5,        0),
-            #App.Vector(C3.x,             C3.y * _cf,             0),
-            App.Vector(C3.x,             -12.5,             0),
-            App.Vector(self.C.x,         0,                      0),
-    """
-        #dead code
-        #def temp_a(): #> AppVector()
-        #    _l_uJ2exK = extra_point_K-self.J2 
-        #    return self.J2 - _l_uJ2exK.multiply(0.5)
-        #_temp=temp_a()
-        #_temp = App.Vector(self.J2.x,self.J2.y*.5,0)

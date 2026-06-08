@@ -42,8 +42,9 @@ Show_Plane = [False,  # xs_0
               False]  # xs_toe_end
 
 # Derived from shape_params — kept as module names so uv_0.py / xs_N.py don't need changing
-NURBS_DEGREE = sp.shape_params.nurbs_degree
-CRISP_SOLE   = sp.shape_params.crisp_sole
+NURBS_DEGREE  = sp.shape_params.nurbs_degree
+CRISP_SOLE    = sp.shape_params.crisp_sole
+GIRTH_SCALE   = sp.shape_params.girth_scale
 
 # --- Module-level handles set by build() ---
 gvec_uHB  = gvec_uHC5 = None
@@ -65,6 +66,7 @@ bc_3d_edge_list = []
 xs_0 = xs_1 = xs_2 = xs_3 = xs_4 = xs_5 = xs_6 = xs_7 = xs_8 = None
 xs_heel_end_row = None
 xs_toe_end = None
+xs_toe_end_scalars = None
 
 
 # --- Dataclasses ---
@@ -233,12 +235,13 @@ def build():
     global bc_3d_medial_highwater, bc_3d_lateral_highwater
     global bc_3d_medial_crown, bc_3d_lateral_crown, bc_3d_edge_list
     global xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
-    global xs_heel_end_row, xs_toe_end
-    global NURBS_DEGREE, CRISP_SOLE
+    global xs_heel_end_row, xs_toe_end, xs_toe_end_scalars
+    global NURBS_DEGREE, CRISP_SOLE, GIRTH_SCALE
 
     importlib.reload(sp)
     NURBS_DEGREE = sp.shape_params.nurbs_degree
     CRISP_SOLE   = sp.shape_params.crisp_sole
+    GIRTH_SCALE  = sp.shape_params.girth_scale
 
     # --- Global direction vectors ---
     gvec_uHB  = hf.xz_xy_place * (last_profile.profile_dwg.B  - last_profile.profile_dwg.H).normalize()
@@ -424,7 +427,7 @@ def build():
     last_profile.build_xs_plane_pi("xs_toe_end", xs_toe_end_placement, Show_Plane[9])
     print(f"xs_toe_end at d={_d_lo:.2f} mm from J  (insole half-width ≈ {_insole_medial_y_at_spine_d(_d_lo):.2f} mm)")
 
-    _sc   = compute_xs_scalars(xs_toe_end_placement, gvec_uJB1_localY)
+    _sc = xs_toe_end_scalars = compute_xs_scalars(xs_toe_end_placement, gvec_uJB1_localY)
     _g_C  = hf.get_bspline_plane_intersection_new(
                 bc_3d_front, xs_toe_end_tvec, gvec_uJB1)[0]
     _HC   = (_g_C - xs_toe_end_tvec).dot(gvec_uJB1_localY)

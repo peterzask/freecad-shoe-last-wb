@@ -46,12 +46,32 @@ def _hartley_judd_knots(params, degree):
 
 degree = xs_base.NURBS_DEGREE
 
+# xs_scalars_list[i].H is the girth-scale center for xs_list[i]
+xs_scalars_list = [
+    xs_base.xs_0, xs_base.xs_1, xs_base.xs_2, xs_base.xs_3,
+    xs_base.xs_4, xs_base.xs_5, xs_base.xs_6, xs_base.xs_7, xs_base.xs_8,
+]
+
+# Locked ring indices (H2 seam-start, H3, H1; seam-end added per-row)
+_LOCKED_PLAIN = frozenset([0, 1, 2])   # H2, H3, H1
+_LOCKED_CRISP = frozenset([0, 1, 2, 3])  # H2, H3, H1, H1(doubled)
+
+def _apply_girth_scale(pts, h, scale, crisp):
+    """Expand T1/C1/C/C2/T2 outward from H; leave H1/H2/H3 (insole footprint) fixed."""
+    if scale == 1.0:
+        return pts
+    locked = (_LOCKED_CRISP if crisp else _LOCKED_PLAIN) | {len(pts) - 1}
+    return [p if i in locked else h + (p - h) * scale
+            for i, p in enumerate(pts)]
+
 # Transform each section's control points from sketch-local to global 3D
 # heel_end_row prepended so degree-2 u smooths through the heel — no separate heel cap needed
 rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
-for xs, placement in xs_list:
+for (xs, placement), xs_sc in zip(xs_list, xs_scalars_list):
     pl = placement * hf.yz_xy_place
-    rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)])
+    pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
+    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.GIRTH_SCALE, xs_base.CRISP_SOLE)
+    rows.append(pts)
 
 pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
 rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_sole=xs_base.CRISP_SOLE)])
@@ -59,6 +79,16 @@ rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_so
 u_count = len(rows)    # 11: heel_end + 9 sections + toe_end
 v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 H2
 print(f"u_count={u_count}, v_count={v_count}")
+
+# Show scaled control points as vertex markers (rows 1–9, skipping heel_end and toe_end)
+if xs_base.GIRTH_SCALE != 1.0:
+    _ctrl_verts = [Part.Vertex(pt) for row in rows[1:-1] for pt in row]
+    _ctrl_compound = Part.makeCompound(_ctrl_verts)
+    _ctrl_name = "GirthScaleCtrlPts"
+    if App.ActiveDocument.getObject(_ctrl_name):
+        App.ActiveDocument.removeObject(_ctrl_name)
+    _ctrl_obj = App.ActiveDocument.addObject("Part::Feature", _ctrl_name)
+    _ctrl_obj.Shape = _ctrl_compound
 
 for u, row in enumerate(rows):
     for v, pv in enumerate(row):

@@ -24,8 +24,14 @@ class shape_params_c:
     toe_spring: float = 20.0   # BB1: vertical toe spring at toe tip B1 (mm)
 
     # --- NURBS surface ---
-    nurbs_degree: int  = 2
-    crisp_sole:   bool = True
+    nurbs_degree: int   = 2
+    crisp_sole:   bool  = True
+
+    # --- Girth compensation ---
+    # NURBS surface lies inside the convex hull of its control rings (hull shrinkage).
+    # Scale > 1.0 expands T1/C1/C/C2/T2 outward from H (insole contact center),
+    # keeping H1/H2/H3 (insole footprint) locked, to hit target girth measurements.
+    girth_scale:  float = 1.04
 
 
 # Singleton — import this instance everywhere.

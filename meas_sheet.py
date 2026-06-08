@@ -2,6 +2,7 @@ import FreeCAD as App
 import helper_funcs as hf
 from scanf import scanf
 import foot_meas_data as fmd
+from math import gcd
 
 
 # Default values as inch-fraction strings (same format user types in)
@@ -16,7 +17,7 @@ _DEFAULTS_IN = {
     'ankle':       "10",
 }
 
-# Maps field name → B-column cell
+# Maps field name → column cells (B=text, C=decimal inches, D=mm)
 _CELL_MAP = {
     'foot_len':    'B3',
     'joint':       'B4',
@@ -27,6 +28,8 @@ _CELL_MAP = {
     'heel_height': 'B9',
     'ankle':       'B10',
 }
+_CELL_MAP_C = {k: 'C' + v[1:] for k, v in _CELL_MAP.items()}
+_CELL_MAP_D = {k: 'D' + v[1:] for k, v in _CELL_MAP.items()}
 
 # Proportion checks: (min_ratio, max_ratio) relative to foot_len in mm
 # Ranges are loose — catch obvious data-entry errors without false positives
@@ -100,6 +103,57 @@ def _parse_inch_fraction(text: str):
     return float(result[0]) if result else None
 
 
+def _format_inch_fraction(inches: float) -> str:
+    """Decimal inches → 'whole N/D' text rounded to nearest 1/8\"."""
+    whole = int(inches)
+    eighths = round((inches - whole) * 8)
+    if eighths == 8:
+        whole += 1
+        eighths = 0
+    if eighths == 0:
+        return str(whole)
+    g = gcd(eighths, 8)
+    return f"{whole} {eighths // g}/{8 // g}"
+
+
+def _sync_row(fms, cell_b, cell_c, cell_d):
+    """Derive the two empty cells from the one filled cell.
+    If zero or two-or-more cells are filled, do nothing — user must clear first."""
+    b = fms.getContents(cell_b)
+    c = fms.getContents(cell_c)
+    d = fms.getContents(cell_d)
+    filled = sum(1 for x in [b, c, d] if x)
+    if filled != 1:
+        return
+    if b:
+        inches = _parse_inch_fraction(b)
+        if inches is None:
+            return
+        fms.set(cell_c, f"{inches:.4f}")
+        fms.set(cell_d, f"{inches * 25.4:.2f}")
+    elif c:
+        try:
+            inches = float(c)
+        except (TypeError, ValueError):
+            return
+        fms.set(cell_b, _format_inch_fraction(inches))
+        fms.set(cell_d, f"{inches * 25.4:.2f}")
+    else:
+        try:
+            mm = float(d)
+        except (TypeError, ValueError):
+            return
+        inches = mm / 25.4
+        fms.set(cell_b, _format_inch_fraction(inches))
+        fms.set(cell_c, f"{inches:.4f}")
+
+
+def _sync_columns(fms):
+    """Sync B/C/D columns for all measurement rows."""
+    for field in _CELL_MAP:
+        _sync_row(fms, _CELL_MAP[field], _CELL_MAP_C[field], _CELL_MAP_D[field])
+
+
 def load_foot_measurements(doc) -> fmd.foot_meas_raw:
     """Read Foot_Measurements spreadsheet → foot_meas_raw.
     Returns defaults for any missing or unparseable cell."""
@@ -148,9 +202,10 @@ def validate_measurements(raw: fmd.foot_meas_raw) -> bool:
     return ok
 
 
-# --- Script body: open/create spreadsheet, populate if new ---
+# --- Script body: open/create spreadsheet, populate if new, sync columns ---
 doc, fms, is_new = Doc_Spreadsheet(None, "Foot_Measurements")
 _setup_headers(fms)
 if is_new or not fms.getContents(_CELL_MAP['foot_len']):
     _populate_defaults(fms)
+_sync_columns(fms)
 fms.recompute()

@@ -41,8 +41,12 @@ _PROPORTION_CHECKS = {
 }
 
 
-def Doc_Spreadsheet(doc_name: str, spreadsheet_name: str):
-    if doc_name in App.listDocuments():
+def Doc_Spreadsheet(doc_name, spreadsheet_name: str):
+    if doc_name is None:
+        doc = App.ActiveDocument
+        if doc is None:
+            raise RuntimeError("Doc_Spreadsheet: no active FreeCAD document.")
+    elif doc_name in App.listDocuments():
         doc = App.getDocument(doc_name)
         print(f"Found '{doc_name}'")
     else:
@@ -145,7 +149,7 @@ def validate_measurements(raw: fmd.foot_meas_raw) -> bool:
 
 
 # --- Script body: open/create spreadsheet, populate if new ---
-doc, fms, is_new = Doc_Spreadsheet(hf.doc_name, "Foot_Measurements")
+doc, fms, is_new = Doc_Spreadsheet(None, "Foot_Measurements")
 _setup_headers(fms)
 if is_new or not fms.getContents(_CELL_MAP['foot_len']):
     _populate_defaults(fms)

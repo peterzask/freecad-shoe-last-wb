@@ -180,7 +180,7 @@ def compute_xs_scalars(placement: App.Placement,
         CC2 = 0.0
 
     try:
-        _g_C1 = App.Vector(hf.get_bspline_plane_intersection_new(
+        _g_C1 = App.Vector(hf.get_bspline_plane_intersection_new( 
                     bc_3d_medial_crown, origin, normal)[0])
         HC1 = (_g_C1 - origin).dot(local_up)
     except IndexError:
@@ -214,16 +214,17 @@ def _insole_medial_y_at_spine_d(d: float) -> float:
 
 
 # --- Build ---
-
+# add, C1 C2 curves in last_insole, and from last_profileC1_insole_medial
 def build():
     global gvec_uHB, gvec_uHC5
-    global g_H, g_J, g_C5, g_H2, g_H2_mod_heel, g_B1, g_B2, g_uHJ, d_HJ
+    global g_H, g_J, g_C5, g_H2, g_H2_mod_heel, g_B1, g_B2, g_uHJ, d_HJ, g_K
     global gvec_Kb_E, gvec_uKbE, gvec_K_I, gvec_J1_J
     global gvec_uJB1, gvec_uJB1_localY
     global jb1_len, g_X, _xs8_x
     global xs_0_tvec, xs_1_tvec, xs_2_tvec, xs_3_tvec, xs_4_tvec
     global xs_5_tvec, xs_6_tvec, xs_7_tvec, xs_8_tvec, xs_toe_end_tvec
     global xs_0_normal, xs_1_normal, xs_2_normal, xs_3_normal, xs_4_normal
+    global xs_5_normal, xs_6_normal, xs_6_normal, xs_7_normal, xs_8_normal
     global xs_0_placement, xs_1_placement, xs_2_placement, xs_3_placement
     global xs_4_placement, xs_5_placement, xs_6_placement, xs_7_placement
     global xs_8_placement, xs_toe_end_placement
@@ -338,6 +339,7 @@ def build():
     bc_3d_lateral_highwater = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.lateral_highwater_bc)
     bc_3d_edge_list.append(bc_3d_lateral_highwater.toShape())
 
+    # Below here, approach is smudging the insole and profile definitions
     # Crown contour curves: height from C1/C2 profile curves, Y-offset from insole crown curves.
     # Tune shoulder height in last_profile.draw_crown_profiles() via shape_params.
     _c1_fbc      = last_profile.profile_dwg.C1_profile_bc
@@ -368,12 +370,12 @@ def build():
         _lc_poles.append(_p + App.Vector(0, _y_lat, 0))
 
     bc_3d_medial_crown = Part.BSplineCurve()
-    bc_3d_medial_crown.buildFromPolesMultsKnots(
-        _mc_poles, _c1_fbc.getMultiplicities(), _c1_fbc.getKnots(), False, _c1_fbc.Degree)
+    bc_3d_medial_crown.buildFromPolesMultsKnots( _mc_poles, _c1_fbc.getMultiplicities(), _c1_fbc.getKnots(), False, _c1_fbc.Degree)
+    #bc_3d_medial_crown.buildFromPoles( _mc_poles, False,1,False)
 
     bc_3d_lateral_crown = Part.BSplineCurve()
-    bc_3d_lateral_crown.buildFromPolesMultsKnots(
-        _lc_poles, _c2_fbc.getMultiplicities(), _c2_fbc.getKnots(), False, _c2_fbc.Degree)
+    bc_3d_lateral_crown.buildFromPolesMultsKnots( _lc_poles, _c2_fbc.getMultiplicities(), _c2_fbc.getKnots(), False, _c2_fbc.Degree)
+    #bc_3d_lateral_crown.buildFromPoles( _lc_poles, False,1,False)
 
     bc_3d_edge_list.append(bc_3d_medial_crown.toShape())
     bc_3d_edge_list.append(bc_3d_lateral_crown.toShape())
@@ -472,5 +474,6 @@ build()
 
 def main():
     print("xs_base main")
+    print(f"g_K = {g_K}")
 if __name__ == "__main__":
     main()

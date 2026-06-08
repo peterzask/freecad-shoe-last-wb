@@ -176,6 +176,7 @@ class draw_profile_c:
             self.J  + (self.J1  - self.J)  * shape_p.crown_med_pct_joint,
             Pa      + (Pb       - Pa)       * shape_p.crown_med_pct_instep,
             self.E,
+            self.E,
             self.C5,
         ]
         self.C1_profile_bc.buildFromPoles(poles_c1, False, degree, False)
@@ -185,6 +186,7 @@ class draw_profile_c:
             toe_anchor,
             self.J  + (self.J1  - self.J)  * shape_p.crown_lat_pct_joint,
             Pa      + (Pb       - Pa)       * shape_p.crown_lat_pct_instep,
+            self.E,
             self.E,
             self.C5,
         ]
@@ -205,6 +207,7 @@ class draw_profile_c:
         sketch.addGeometry(Part.Circle(self.C5E_intercept, hf.nZ, 2.0))
         sketch.addGeometry(Part.Circle(self.C5,            hf.nZ, 2.0))
         sketch.addGeometry(Part.Circle(self.H2,            hf.nZ, 2.0))
+
 
 
 def build_xs_plane_pi(plane_name:str, plane_place: App.Placement, display_on: bool = False):
@@ -237,10 +240,10 @@ def build():
     ft_measurements = last_insole.ft_measurements
     ft_measurements.print_()
 
-    doc_name    = "ScriptModel"
     sketch_name = "Sketch_Profile"
-    doc, sketch_profile = hf.Doc_Sketch(doc_name, sketch_name)
+    doc, sketch_profile = hf.Doc_Sketch(last_insole.doc, sketch_name)
 
+   
     p_lens = profile_lengths_c(ft_measurements, sp.shape_params)
     p_lens.print_()
     profile_dwg = draw_profile_c()
@@ -263,7 +266,9 @@ build()
 
 
 def main():
-    print("In last_profile_main")
+    print("In last_profile_main") 
+    
+    hf.p_vec(profile_dwg.H,"H")
 
 if __name__ == "__main__":
     main()

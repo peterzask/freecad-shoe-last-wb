@@ -23,8 +23,8 @@ import numpy as np
 #
 #    {to} |zt         R_to_from                {from}|zf
 #         |          [xt*xf  xt*yf  xt*zf            |  /yf
-#         |           yt*yf  yt*yf  yt*zf            | /
-#         |           zf*zf  zt*yf  zt*zf]           |/
+#         |           yt*xf  yt*yf  yt*zf            | /
+#         |           zt*xf  zt*yf  zt*zf]           |/
 #        / \                                          \
 #       /   \         R_to_from                        \
 #   xt /     \ yt     [0    -1   0                      \xf
@@ -35,7 +35,10 @@ import numpy as np
 #   The rows of R_to_from are to's axis
 #   in from's coordinates
 #   For Pfrom = (100,0,-50) 
-# P_to = R_to_from * P_from = (0,-100,50)
+# P_to = R_to_from * P_from = (0,-100,-50)
+#   Conversely, The rows of R_to_from are
+#   to's coordinate axis in from's coordinates.
+#   For, P_to = (1,1,0), P_from = transpose(P_to_from)*P_to = (1,-1,0)
 
 xz_xy_place = App.Placement(App.Vector(0,0,0), App.Rotation(App.Vector(1,0,0),90))
 #xz_xy_place = App.Placement(App.Vector(0,0, 0), 
@@ -43,6 +46,7 @@ xz_xy_place = App.Placement(App.Vector(0,0,0), App.Rotation(App.Vector(1,0,0),90
 #                           App.Vector(0, 0, 1),
 #                           App.Vector(0, -1, 0)))
 
+eyeRot = App.Rotation(0,0,0)
 
 yz_xy_place = App.Placement(App.Vector(0,0,0),App.Rotation(App.Vector(1,1,1),120))
 nX = App.Vector(1.0,0.0,0.0)    
@@ -60,15 +64,20 @@ def rotate_vector(A: App.Vector, degrees:float):
     return App.Vector(new_x,new_y,A.z)
     
 
-def Doc_Sketch(doc_name: str, sketch_name: str):
-    #Find or create ScriptModel document to put sketch into.
-    if doc_name in App.listDocuments():
-        doc = App.getDocument(doc_name)
-        #print(f"Found '{doc_name}'\n")
+def Doc_Sketch(doc_or_name, sketch_name: str):
+    if doc_or_name is None:
+        doc = App.ActiveDocument
+        if doc is None:
+            raise RuntimeError("Doc_Sketch: no active FreeCAD document.")
+    elif isinstance(doc_or_name, str):
+        if doc_or_name in App.listDocuments():
+            doc = App.getDocument(doc_or_name)
+        else:
+            print(f"'{doc_or_name}' was not found, opening new one.")
+            doc = App.newDocument(doc_or_name)
+            doc.UndoMode = 0
     else:
-        print(f"'{doc_name}' was not found, opening newone.")
-        doc = App.newDocument(doc_name) 
-        doc.UndoMode = 0 #plug memory leaks
+        doc = doc_or_name  # already a document object
     list_of_sketches = doc.findObjects("Sketcher::SketchObject")
     #print("\nList of sketches:\n",list_of_sketches)
     internal_sketch_names = [sk.Name for sk in list_of_sketches]
@@ -89,7 +98,6 @@ def Doc_Sketch(doc_name: str, sketch_name: str):
 # edges = []
 # edges.append(bspline.toShape())
 # arc_length_edges(edges)
-doc_name = "ScriptModel"
 def arc_length_edges(edge_list = []):
     lSum = 0
     #edges = FreeCADGui.Selection.getSelectionEx()[0].SubObjects

@@ -18,9 +18,9 @@ if False:
     
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
-doc_name    = "ScriptModel"
+
 sketch_name = "Sketch_xs_7"
-doc, sketch_xs7 = hf.Doc_Sketch(doc_name, sketch_name)
+doc, sketch_xs7 = hf.Doc_Sketch(last_insole.doc, sketch_name)
 
 
 @dataclass

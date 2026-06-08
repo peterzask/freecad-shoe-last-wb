@@ -282,8 +282,7 @@ class insole_layout:
         sketch_insole.addGeometry(Part.Circle(self.O,  hf.nZ, 2.0))
 
 
-# --- Document and sketch names ---
-doc_name    = "ScriptModel"
+# --- Sketch name ---
 sketch_name = "Sketch_Insole"
 
 # Module-level handles — set by build(), used by last_profile and xs_base
@@ -299,7 +298,7 @@ def build():
     global doc, sketch_insole, ft_measurements, insole_lens, insole_dwg, outline_bc
     importlib.reload(sp)
 
-    doc, sketch_insole = hf.Doc_Sketch(doc_name, sketch_name)
+    doc, sketch_insole = hf.Doc_Sketch(None, sketch_name)
     doc.recompute()
 
     import foot_meas_data as fmd

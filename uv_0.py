@@ -56,13 +56,26 @@ xs_scalars_list = [
 _LOCKED_PLAIN = frozenset([0, 1, 2])   # H2, H3, H1
 _LOCKED_CRISP = frozenset([0, 1, 2, 3])  # H2, H3, H1, H1(doubled)
 
-def _apply_girth_scale(pts, h, scale, crisp):
-    """Expand T1/C1/C/C2/T2 outward from H; leave H1/H2/H3 (insole footprint) fixed."""
-    if scale == 1.0:
-        return pts
-    locked = (_LOCKED_CRISP if crisp else _LOCKED_PLAIN) | {len(pts) - 1}
-    return [p if i in locked else h + (p - h) * scale
-            for i, p in enumerate(pts)]
+def _apply_girth_scale(pts, h, scale, crisp, t_boost_mm=0.0):
+    """Expand T1/C1/C/C2/T2 outward from H; leave H1/H2/H3 (insole footprint) fixed.
+    t_boost_mm adds a direct mm nudge to T1 and T2 on top of scale — they pull in
+    more than C/C1/C2 due to higher ring curvature at the sole-to-crown shoulder."""
+    n = len(pts)
+    locked = (_LOCKED_CRISP if crisp else _LOCKED_PLAIN) | {n - 1}
+    t1_idx = 4 if crisp else 3
+    t2_idx = n - 2
+    result = []
+    for i, p in enumerate(pts):
+        if i in locked:
+            result.append(p)
+        else:
+            d = p - h
+            scaled = h + d * scale
+            if t_boost_mm and i in (t1_idx, t2_idx):
+                dl = d.Length
+                scaled = scaled + d * (t_boost_mm / dl) if dl > 0 else scaled
+            result.append(scaled)
+    return result
 
 # Transform each section's control points from sketch-local to global 3D
 # heel_end_row prepended so degree-2 u smooths through the heel — no separate heel cap needed
@@ -70,7 +83,7 @@ rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
 for (xs, placement), xs_sc in zip(xs_list, xs_scalars_list):
     pl = placement * hf.yz_xy_place
     pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
-    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.GIRTH_SCALE, xs_base.CRISP_SOLE)
+    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.GIRTH_SCALE, xs_base.CRISP_SOLE, xs_base.T_BOOST_MM)
     rows.append(pts)
 
 pl = xs_base.xs_toe_end_placement * hf.yz_xy_place

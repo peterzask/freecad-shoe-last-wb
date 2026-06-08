@@ -31,7 +31,10 @@ class shape_params_c:
     # NURBS surface lies inside the convex hull of its control rings (hull shrinkage).
     # Scale > 1.0 expands T1/C1/C/C2/T2 outward from H (insole contact center),
     # keeping H1/H2/H3 (insole footprint) locked, to hit target girth measurements.
+    # t_boost_mm adds a direct mm offset to T1/T2 only — they pull in more than C/C1/C2
+    # because they sit in the high-curvature part of the ring.
     girth_scale:  float = 1.04
+    t_boost_mm:   float = 0.0
 
 
 # Singleton — import this instance everywhere.

@@ -108,13 +108,14 @@ class xs_ctrl_pts_c:
     C2: App.Vector = None
 
     def control_points(self, crisp_sole=False):
-        # H3 is the seam (index 0 and last); not doubled in crisp mode.
-        # crisp_sole doubles H2 (lateral) and H1 (medial) for a sharp insole crease.
+        # H2 is the seam (index 0 and last): lateral insole edge, C0 crease on sole side.
+        # crisp_sole doubles H1 (medial edge): locks H1→T1 tangent so instep side
+        # stays low to ground before rising — better medial billow.
         if crisp_sole:
-            return [self.H3, self.H2, self.H2, self.T2, self.C2,
-                    self.C, self.C1, self.T1, self.H1, self.H1, self.H3]
-        return [self.H3, self.H2, self.T2, self.C2,
-                self.C, self.C1, self.T1, self.H1, self.H3]
+            return [self.H2, self.H3, self.H1, self.H1, self.T1, self.C1,
+                    self.C, self.C2, self.T2, self.H2]
+        return [self.H2, self.H3, self.H1, self.T1, self.C1,
+                self.C, self.C2, self.T2, self.H2]
 
 
 # --- Functions that use module globals (defined before build so they're accessible) ---
@@ -198,11 +199,11 @@ def compute_xs_scalars(placement: App.Placement,
 
 
 def get_heel_end_row(crisp_sole=False):
-    """Return heel cap row matching control_points() v-order; doubles H2/H1 (not H3) when crisp."""
+    """Return heel cap row matching control_points() v-order; doubles H1 (index 2) when crisp."""
     r = xs_heel_end_row
     if not crisp_sole:
         return r
-    return [r[0], r[1], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[7], r[8]]
+    return [r[0], r[1], r[2], r[2], r[3], r[4], r[5], r[6], r[7], r[8]]
 
 
 def _insole_medial_y_at_spine_d(d: float) -> float:
@@ -396,15 +397,15 @@ def build():
     _cap_lat    = App.Vector(0, _cap_spread, 0)
     _hp = bc_3d_heel.getPoles()   # [0]=top(C5), [1]=mid(H2_mod), [2]=sole(H)
     xs_heel_end_row = [
-        App.Vector(_hp[2]),        # H3: heel sole center (seam)
-        _hp[2] - _cap_lat,         # H2: heel sole lateral
-        _hp[1] - _cap_lat,         # T2: mid-heel lateral
-        _hp[0] - _cap_lat,         # C2: top-heel lateral
-        App.Vector(_hp[0]),        # C:  top-heel center
-        _hp[0] + _cap_lat,         # C1: top-heel medial
-        _hp[1] + _cap_lat,         # T1: mid-heel medial
+        _hp[2] - _cap_lat,         # H2: heel sole lateral (seam)
+        App.Vector(_hp[2]),        # H3: heel sole center
         _hp[2] + _cap_lat,         # H1: heel sole medial
-        App.Vector(_hp[2]),        # H3: heel sole center (close seam)
+        _hp[1] + _cap_lat,         # T1: mid-heel medial
+        _hp[0] + _cap_lat,         # C1: top-heel medial
+        App.Vector(_hp[0]),        # C:  top-heel center
+        _hp[0] - _cap_lat,         # C2: top-heel lateral
+        _hp[1] - _cap_lat,         # T2: mid-heel lateral
+        _hp[2] - _cap_lat,         # H2: heel sole lateral (close seam)
     ]
 
     # --- Toe end cap: binary search for last plane where insole half-width >= threshold ---

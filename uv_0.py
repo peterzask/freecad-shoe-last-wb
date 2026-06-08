@@ -57,15 +57,15 @@ pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
 rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_sole=xs_base.CRISP_SOLE)])
 
 u_count = len(rows)    # 11: heel_end + 9 sections + toe_end
-v_count = len(rows[0]) # 9 (or 11 with CRISP_SOLE): H3 [H2 H2] T2 C2 C C1 T1 [H1 H1] H3
+v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 H2
 print(f"u_count={u_count}, v_count={v_count}")
 
 for u, row in enumerate(rows):
     for v, pv in enumerate(row):
         hf.p_vec(pv, f"  [{u},{v}]")
 
-# Chord-length parameterization in u along the C-point spine (v_count//2 = C index)
-C_idx = v_count // 2
+# Chord-length parameterization in u along the C-point spine (C is at v_count//2 + 1)
+C_idx = v_count // 2 + 1
 uks_raw = [0.0]
 for u in range(1, u_count):
     uks_raw.append(uks_raw[-1] + (rows[u][C_idx] - rows[u-1][C_idx]).Length)

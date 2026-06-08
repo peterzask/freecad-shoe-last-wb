@@ -25,9 +25,10 @@ class foot_c:
     h_instep: float = 0.0
     heel: float = 0.0  #heel girth
     heel_height: float = 0.0
-    ankle: float = 0.0
+    ankle:       float = 0.0
+    toe_space:   float = 15.0
     def __init__(self, foot_len, joint, waist, instep,
-                 h_instep, heel, heel_height, ankle):
+                 h_instep, heel, heel_height, ankle, toe_space=15.0):
         self.foot_len = foot_len
         self.joint = joint
         self.waist = waist
@@ -36,6 +37,7 @@ class foot_c:
         self.heel = heel
         self.heel_height = heel_height
         self.ankle = ankle
+        self.toe_space = toe_space
 
     def print_(self):
         print("foot_c\n",
@@ -51,13 +53,11 @@ class foot_c:
 
 @dataclass
 class insole_len_c:
-    BD:   float=15.0 # Toe Allowance, default = 15mm
+    BD:   float=15.0 # Toe Allowance — overwritten from ft_meas.toe_space in __init__
     AC:   float=5.0  # 5 mm constant
     def __init__(self,  ft_meas: foot_c):
-        print(ft_meas)
-        print("Here")
-        print(ft_meas.foot_len)
         self.AB = ft_meas.foot_len
+        self.BD = ft_meas.toe_space
         self.CJ = ft_meas.foot_len * 2.0 / 3.0
         self.JJ1 = ft_meas.joint / 6.0
         self.JJ2 = ft_meas.joint / 6.0 + 10.0
@@ -321,6 +321,7 @@ def build():
         heel        = _raw.heel,
         heel_height = _raw.heel_height,
         ankle       = _raw.ankle,
+        toe_space   = _raw.toe_space,
     )
     ft_measurements.print_()
 

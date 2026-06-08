@@ -12,3 +12,4 @@ class foot_meas_raw:
     heel:        float = 25.4 * (13.5 - 0.5)
     heel_height: float = 25.4 * 1.5
     ankle:       float = 25.4 * 10
+    toe_space:   float = 15.0

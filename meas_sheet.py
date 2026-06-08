@@ -1,6 +1,5 @@
 import FreeCAD as App
 import helper_funcs as hf
-from scanf import scanf
 import foot_meas_data as fmd
 from math import gcd
 
@@ -15,6 +14,7 @@ _DEFAULTS_IN = {
     'heel':        "13",
     'heel_height': "1 1/2",
     'ankle':       "10",
+    'toe_space':   "5/8",
 }
 
 # Maps field name → column cells (B=text, C=decimal inches, D=mm)
@@ -27,6 +27,7 @@ _CELL_MAP = {
     'heel':        'B8',
     'heel_height': 'B9',
     'ankle':       'B10',
+    'toe_space':   'B11',
 }
 _CELL_MAP_C = {k: 'C' + v[1:] for k, v in _CELL_MAP.items()}
 _CELL_MAP_D = {k: 'D' + v[1:] for k, v in _CELL_MAP.items()}
@@ -69,11 +70,15 @@ def Doc_Spreadsheet(doc_name, spreadsheet_name: str):
     return doc, spreadsheet, is_new
 
 
+_TOE_SPACE_MM = 15.0  # standard toe allowance (Koleff constant, matches insole_len_c.BD)
+
+
 def _setup_headers(fms):
     fms.set("A1", "Foot Measurements")
     fms.set("B1", "Inches Text")
     fms.set("C1", "Inches Decimal")
     fms.set("D1", "mm")
+    fms.set("E1", "US Size")
     fms.set("A2", "Foot length")
     fms.set("A3",  "foot_len")
     fms.set("A4",  "joint")
@@ -83,24 +88,45 @@ def _setup_headers(fms):
     fms.set("A8",  "heel")
     fms.set("A9",  "heel_height")
     fms.set("A10", "ankle")
+    fms.set("A11", "toe_space")
 
 
 def _populate_defaults(fms):
-    """Write default inch-fraction strings to B column. Only called on a new spreadsheet."""
-    for field, cell in _CELL_MAP.items():
-        fms.set(cell, _DEFAULTS_IN[field])
-    print("Spreadsheet populated with default measurements.")
+    """Write defaults to any empty B cells and immediately derive C and D."""
+    for field, cell_b in _CELL_MAP.items():
+        if not fms.getContents(cell_b):
+            text = _DEFAULTS_IN[field]
+            fms.set(cell_b, text)
+            inches = _parse_inch_fraction(text)
+            if inches is not None:
+                fms.set(_CELL_MAP_C[field], f"{inches:.4f}")
+                fms.set(_CELL_MAP_D[field], f"{inches * 25.4:.2f}")
+            print(f"  default set: {cell_b} = {text}")
 
 
 def _parse_inch_fraction(text: str):
-    """'11 1/8' or '11+1/8' → decimal inches. Returns None on parse failure."""
+    """Parse inch text → decimal inches. Handles '11 1/8', '11+1/8', '5/8', '11.125', '11'.
+    FreeCAD getContents() prefixes formula cells with '=' and text cells with \"'\" — strip both."""
     text = text.strip().replace('+', ' ')
-    result = scanf("%d %d/%d", text, collapseWhitespace=True)
-    if result is not None:
-        whole, num, den = result
-        return whole + (num / den if den != 0 else 0.0)
-    result = scanf("%f", text)
-    return float(result[0]) if result else None
+    if text.startswith("'"):
+        text = text[1:]
+    elif text.startswith('='):
+        text = text[1:].replace(' ', '')  # '=5 / 8' → '5/8'
+    try:
+        parts = text.split()
+        if len(parts) == 2 and '/' in parts[1]:
+            whole = int(parts[0])
+            num, den = parts[1].split('/', 1)
+            return whole + int(num) / int(den)
+        elif len(parts) == 1:
+            if '/' in parts[0]:
+                num, den = parts[0].split('/', 1)
+                return int(num) / int(den)
+            else:
+                return float(parts[0])
+    except (ValueError, ZeroDivisionError):
+        pass
+    return None
 
 
 def _format_inch_fraction(inches: float) -> str:
@@ -154,6 +180,34 @@ def _sync_columns(fms):
         _sync_row(fms, _CELL_MAP[field], _CELL_MAP_C[field], _CELL_MAP_D[field])
 
 
+def _sync_size_column(fms):
+    """Compute US shoe size from foot_len and write to E3.
+    Formula: last_length = foot_len + toe_space; size = (last_inches - 8) * 3"""
+    d3 = fms.getContents('D3')
+    if d3:
+        try:
+            foot_len_mm = float(d3)
+        except (TypeError, ValueError):
+            foot_len_mm = None
+    else:
+        b3 = fms.getContents('B3')
+        if not b3:
+            return
+        inches = _parse_inch_fraction(b3)
+        foot_len_mm = inches * 25.4 if inches is not None else None
+
+    if not foot_len_mm or foot_len_mm <= 0:
+        return
+    d11 = fms.getContents('D11')
+    try:
+        toe_space_mm = float(d11) if d11 else _TOE_SPACE_MM
+    except (TypeError, ValueError):
+        toe_space_mm = _TOE_SPACE_MM
+    last_inches = (foot_len_mm + toe_space_mm) / 25.4
+    size = (last_inches - 8.0) * 3.0
+    fms.set('E3', f"{size:.1f}")
+
+
 def load_foot_measurements(doc) -> fmd.foot_meas_raw:
     """Read Foot_Measurements spreadsheet → foot_meas_raw.
     Returns defaults for any missing or unparseable cell."""
@@ -205,7 +259,8 @@ def validate_measurements(raw: fmd.foot_meas_raw) -> bool:
 # --- Script body: open/create spreadsheet, populate if new, sync columns ---
 doc, fms, is_new = Doc_Spreadsheet(None, "Foot_Measurements")
 _setup_headers(fms)
-if is_new or not fms.getContents(_CELL_MAP['foot_len']):
-    _populate_defaults(fms)
+_populate_defaults(fms)
+fms.recompute()
 _sync_columns(fms)
+_sync_size_column(fms)
 fms.recompute()

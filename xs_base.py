@@ -44,8 +44,8 @@ Show_Plane = [False,  # xs_0
 # Derived from shape_params — kept as module names so uv_0.py / xs_N.py don't need changing
 NURBS_DEGREE  = sp.shape_params.nurbs_degree
 CRISP_SOLE    = sp.shape_params.crisp_sole
-GIRTH_SCALE   = sp.shape_params.girth_scale
-T_BOOST_MM    = sp.shape_params.t_boost_mm
+C_SCALE       = sp.shape_params.c_scale
+T_SCALE       = sp.shape_params.t_scale
 
 # --- Module-level handles set by build() ---
 gvec_uHB  = gvec_uHC5 = None
@@ -237,13 +237,13 @@ def build():
     global bc_3d_medial_crown, bc_3d_lateral_crown, bc_3d_edge_list
     global xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
     global xs_heel_end_row, xs_toe_end, xs_toe_end_scalars
-    global NURBS_DEGREE, CRISP_SOLE, GIRTH_SCALE, T_BOOST_MM
+    global NURBS_DEGREE, CRISP_SOLE, C_SCALE, T_SCALE
 
     importlib.reload(sp)
     NURBS_DEGREE = sp.shape_params.nurbs_degree
     CRISP_SOLE   = sp.shape_params.crisp_sole
-    GIRTH_SCALE  = sp.shape_params.girth_scale
-    T_BOOST_MM   = sp.shape_params.t_boost_mm
+    C_SCALE      = sp.shape_params.c_scale
+    T_SCALE      = sp.shape_params.t_scale
 
     # --- Global direction vectors ---
     gvec_uHB  = hf.xz_xy_place * (last_profile.profile_dwg.B  - last_profile.profile_dwg.H).normalize()

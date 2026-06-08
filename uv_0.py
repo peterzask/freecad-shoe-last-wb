@@ -56,10 +56,9 @@ xs_scalars_list = [
 _LOCKED_PLAIN = frozenset([0, 1, 2])   # H2, H3, H1
 _LOCKED_CRISP = frozenset([0, 1, 2, 3])  # H2, H3, H1, H1(doubled)
 
-def _apply_girth_scale(pts, h, scale, crisp, t_boost_mm=0.0):
-    """Expand T1/C1/C/C2/T2 outward from H; leave H1/H2/H3 (insole footprint) fixed.
-    t_boost_mm adds a direct mm nudge to T1 and T2 on top of scale — they pull in
-    more than C/C1/C2 due to higher ring curvature at the sole-to-crown shoulder."""
+def _apply_girth_scale(pts, h, c_scale, t_scale, crisp):
+    """Expand non-sole control points outward from H; H1/H2/H3 stay locked.
+    c_scale applies to C1/C/C2; t_scale applies to T1/T2 independently."""
     n = len(pts)
     locked = (_LOCKED_CRISP if crisp else _LOCKED_PLAIN) | {n - 1}
     t1_idx = 4 if crisp else 3
@@ -68,13 +67,10 @@ def _apply_girth_scale(pts, h, scale, crisp, t_boost_mm=0.0):
     for i, p in enumerate(pts):
         if i in locked:
             result.append(p)
+        elif i in (t1_idx, t2_idx):
+            result.append(h + (p - h) * t_scale)
         else:
-            d = p - h
-            scaled = h + d * scale
-            if t_boost_mm and i in (t1_idx, t2_idx):
-                dl = d.Length
-                scaled = scaled + d * (t_boost_mm / dl) if dl > 0 else scaled
-            result.append(scaled)
+            result.append(h + (p - h) * c_scale)
     return result
 
 # Transform each section's control points from sketch-local to global 3D
@@ -83,7 +79,7 @@ rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
 for (xs, placement), xs_sc in zip(xs_list, xs_scalars_list):
     pl = placement * hf.yz_xy_place
     pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
-    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.GIRTH_SCALE, xs_base.CRISP_SOLE, xs_base.T_BOOST_MM)
+    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.C_SCALE, xs_base.T_SCALE, xs_base.CRISP_SOLE)
     rows.append(pts)
 
 pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
@@ -94,7 +90,7 @@ v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 
 print(f"u_count={u_count}, v_count={v_count}")
 
 # Show scaled control points as vertex markers (rows 1–9, skipping heel_end and toe_end)
-if xs_base.GIRTH_SCALE != 1.0:
+if xs_base.C_SCALE != 1.0 or xs_base.T_SCALE != 1.0:
     _ctrl_verts = [Part.Vertex(pt) for row in rows[1:-1] for pt in row]
     _ctrl_compound = Part.makeCompound(_ctrl_verts)
     _ctrl_name = "GirthScaleCtrlPts"

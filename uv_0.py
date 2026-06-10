@@ -166,6 +166,26 @@ print(f"Exported STL:  {stl_path}")
 
 
 
+# --- Girth sanity check ---
+# Polygon approximation of each cross-section ring (straight lines between control
+# points, before girth scale).  Compare to the foot girth measurements as a
+# lower-bound target — the actual NURBS surface perimeter will be slightly larger
+# due to BSpline curvature, and t_scale/c_scale expand T1/T2 and C outward from H.
+_girth_rows = [
+    ("xs_3  joint",  xs_3.xs_3,  last_insole.ft_measurements.joint),
+    ("xs_4  waist",  xs_4.xs_4,  last_insole.ft_measurements.waist),
+    ("xs_5  instep", xs_5.xs_5,  last_insole.ft_measurements.instep),
+]
+print("\n=== Girth check (polygon, pre-scale) ===")
+print(f"  {'Section':<14}  {'Target':>8}  {'Polygon':>8}  {'Delta':>8}")
+for label, xs_obj, target_mm in _girth_rows:
+    poly_mm, poly_in = xs_obj.perimeter_length()
+    delta = poly_mm - target_mm
+    sign = "+" if delta >= 0 else ""
+    print(f"  {label:<14}  {target_mm:>7.1f}mm  {poly_mm:>7.1f}mm  {sign}{delta:.1f}mm  ({poly_in:.3f}in)")
+print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  (shape_params.py)")
+print("=== positive delta = last larger than foot girth ===\n")
+
 print("\nThe end\n")
 
 

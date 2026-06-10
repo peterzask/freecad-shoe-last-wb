@@ -8,7 +8,7 @@ import gc
 import importlib
 importlib.reload(hf) #helper_funcs)
 
-# Add text name overlays of points in 3d insole and profile drawings.
+# Add point-name text overlays to the 3d insole and profile drawings.
 # To hide, select TextGroups in tree and hit spacebar.
 # Only run if user executes this.
 

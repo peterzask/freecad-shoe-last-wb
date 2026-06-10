@@ -287,50 +287,7 @@ def main():
     testxvec=rotate_vector(testxvec,37.0)
     p_vec(testxvec,"testxvec")
 
-    #doc_name = "ScriptModel"
-    #sketch_name = "Sketch_Helper_Test" 
-    #doc, Sketch_Helper_Test = Doc_Sketch(doc_name,sketch_name)
-    #T = App.Rotation(App.Vector(0,0,-1),App.Vector(-1,0,0),App.Vector(0,1,0))
-    #print_4x4_matrix(T.Matrix,"T")
-    #J1 = insole.insole_dwg.J1
-    #p_vec(J1,"J1")
-    #H1 = insole.insole_dwg.H1
-    #p_vec(H1,"H1")
-    #E = profile.profile_dwg.E
-    #p_vec(E,"E")
-    #intersect,p_intersect = pt_intersect_line(H1,J1,E)
-    #print(f"intrsect t ={intersect}")
-    #p_vec(p_intersect,"p_intersect")
-   
- #   doc.recompute()
-#    addGeometry(Part.Circle(
 
-#    p = App.Vector(10,10,0)
-#    p0 = App.Vector(0,0,0)
-#    p1 = App.Vector(20,0,0)
-#    Sketch_Helper_Test.addGeometry(Part.LineSegment(p0,p1))
-#    Sketch_Helper_Test.addGeometry(Part.Circle(p,nZ,2))
-#    t = pt_intersec_line(p,p0,p1)
-#    #print(f"t = {t}")
-#    pa = p0+(p1-p0)*t
-#    #print(f"pa {pa} ")
-#    Sketch_Helper_Test.addGeometry(Part.Circle(pa,nZ,2))
-#    
-#    n = App.Vector(0,0,1)
-#    d = 3
-#    p0 = App.Vector(-3,2,7)
-#    p1 = App.Vector(3,0,-6)
-#
-#    Pr = line_intersect_plane(n,d,p0,p1)
-#    #print(f"Pr {Pr}")
-##    Pr = p0 + t*(p1-p0)
-##    Pr-p0 = t*(p1-p0)
-#    t = (Pr-p0).dot(p1-p0)/(p1-p0).dot(p1-p0)
-#    #print(f"(t= {t}")
-#    HJh_placement = build_HJh_placement()
-#    Sketch_Helper_Test.Placement = HJh_placement
-    
-    
 if __name__ == "__main__":
     main()
     

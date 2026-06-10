@@ -62,9 +62,9 @@ class insole_len_c:
         self.JJ1 = ft_meas.joint / 6.0
         self.JJ2 = ft_meas.joint / 6.0 + 10.0
         self.AH = self.AB / 5.0
-        self.H1H2 = ft_meas.heel / 5.0 - ft_meas.heel_height / 10.0
+        self.H1H2 = ft_meas.heel / 5.0 - (ft_meas.heel_height-20.0) / 10.0
         self.AD = self.AB + self.BD
-        self.B1B2 = 0.6 * (self.JJ1 + self.JJ2)
+        self.B1B2 = 0.7 * (self.JJ1 + self.JJ2)
         self.H3K = 0.0
     def print_(self):
         print("insole_len_c\n",

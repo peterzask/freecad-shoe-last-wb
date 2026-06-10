@@ -5,9 +5,9 @@ from dataclasses import dataclass
 class shape_params_c:
     # --- Highwater curves: fraction along K->(midpoint of J1/H1) range ---
     hw_med_pct_instep:  float = 0.85   # medial highwater position near instep
-    hw_med_pct_joint:   float = 0.30   # medial highwater position near joint
+    hw_med_pct_joint:   float = 0.50   # medial highwater position near joint (J+pct*(J1-J))
     hw_lat_pct_instep:  float = 0.25   # lateral highwater position near instep
-    hw_lat_pct_joint:   float = 0.25   # lateral highwater position near joint
+    hw_lat_pct_joint:   float = 0.43   # lateral highwater position near joint (lateral flatter than medial)
 
     # --- Crown shoulder: same fractional range, above highwater ---
     crown_med_pct_instep:  float = 0.92

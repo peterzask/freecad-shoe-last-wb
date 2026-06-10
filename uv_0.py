@@ -166,24 +166,35 @@ print(f"Exported STL:  {stl_path}")
 
 
 
-# --- Girth sanity check ---
-# Polygon approximation of each cross-section ring (straight lines between control
-# points, before girth scale).  Compare to the foot girth measurements as a
-# lower-bound target — the actual NURBS surface perimeter will be slightly larger
-# due to BSpline curvature, and t_scale/c_scale expand T1/T2 and C outward from H.
-_girth_rows = [
-    ("xs_3  joint",  xs_3.xs_3,  last_insole.ft_measurements.joint),
-    ("xs_4  waist",  xs_4.xs_4,  last_insole.ft_measurements.waist),
-    ("xs_5  instep", xs_5.xs_5,  last_insole.ft_measurements.instep),
+# --- Girth check: degree-2 BSpline through post-scale 3D ring points ---
+# rows index: 0=heel_end, 1=xs_0 ... 4=xs_3(instep) 5=xs_4(waist) 6=xs_5(joint)
+# Ring closes on itself — last point == first point; drop it before periodic build.
+# degree-2 periodic BSpline matches the NURBS surface v-direction degree,
+# so arc length closely approximates the actual surface girth at each section.
+_girth_ring_data = [
+    ("xs_3  instep", rows[4],  last_insole.ft_measurements.instep),
+    ("xs_4  waist",  rows[5],  last_insole.ft_measurements.waist),
+    ("xs_5  joint",  rows[6],  last_insole.ft_measurements.joint),
 ]
-print("\n=== Girth check (polygon, pre-scale) ===")
-print(f"  {'Section':<14}  {'Target':>8}  {'Polygon':>8}  {'Delta':>8}")
-for label, xs_obj, target_mm in _girth_rows:
-    poly_mm, poly_in = xs_obj.perimeter_length()
-    delta = poly_mm - target_mm
-    sign = "+" if delta >= 0 else ""
-    print(f"  {label:<14}  {target_mm:>7.1f}mm  {poly_mm:>7.1f}mm  {sign}{delta:.1f}mm  ({poly_in:.3f}in)")
-print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  (shape_params.py)")
+_girth_shapes = []
+print("\n=== Girth check (deg-2 BSpline, post-scale) ===")
+print(f"  {'Section':<14}  {'Target':>8}  {'BSpline':>8}  {'Delta':>8}")
+for label, ring, target_mm in _girth_ring_data:
+    poles = ring[:-1]          # drop closing duplicate H2
+    bc = Part.BSplineCurve()
+    bc.buildFromPoles(poles, True, degree, False)   # periodic, same degree as surface
+    arc_mm  = bc.length()
+    arc_in  = arc_mm / 25.4
+    delta   = arc_mm - target_mm
+    sign    = "+" if delta >= 0 else ""
+    print(f"  {label:<14}  {target_mm:>7.1f}mm  {arc_mm:>7.1f}mm  {sign}{delta:.1f}mm  ({arc_in:.3f}in)")
+    _girth_shapes.append(bc.toShape())
+_girth_compound = Part.makeCompound(_girth_shapes)
+_girth_name     = "GirthCheckRings"
+_g_obj = App.ActiveDocument.getObject(_girth_name) or \
+         App.ActiveDocument.addObject("Part::Feature", _girth_name)
+_g_obj.Shape = _girth_compound
+print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  rings shown as '{_girth_name}'")
 print("=== positive delta = last larger than foot girth ===\n")
 
 print("\nThe end\n")

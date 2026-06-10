@@ -9,6 +9,7 @@ import last_profile
 import inspect
 import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
 import xs_base
+import control_curves
 #import analyze_uv_matrix as analyz
 
 if True:
@@ -16,7 +17,8 @@ if True:
     importlib.reload(hf)
     importlib.reload(last_insole)
     importlib.reload(last_profile)
-    importlib.reload(xs_base)
+    importlib.reload(control_curves)  # builds loci from profile curves + overrides
+    importlib.reload(xs_base)         # uses control_curves loci for intersections
     for m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8]:
         importlib.reload(m)
 

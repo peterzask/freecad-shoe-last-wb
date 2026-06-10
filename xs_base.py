@@ -9,6 +9,7 @@ import helper_funcs as hf
 import last_insole
 import last_profile
 import shape_params as sp
+import control_curves
 
 importlib.reload(hf)
 importlib.reload(last_insole)
@@ -339,50 +340,15 @@ def build():
     bc_3d_front = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.front_bc)
     bc_3d_edge_list.append(bc_3d_front.toShape())
 
-    bc_3d_medial_highwater = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.medial_highwater_bc)
+    # control_curves builds these loci from profile curves + per-section overrides;
+    # xs_base intersects them to get HT1/HT2/HC1/HC2 at each section.
+    bc_3d_medial_highwater  = control_curves.medial_hw_locus
+    bc_3d_lateral_highwater = control_curves.lateral_hw_locus
+    bc_3d_medial_crown      = control_curves.medial_crown_locus
+    bc_3d_lateral_crown     = control_curves.lateral_crown_locus
+
     bc_3d_edge_list.append(bc_3d_medial_highwater.toShape())
-
-    bc_3d_lateral_highwater = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.lateral_highwater_bc)
     bc_3d_edge_list.append(bc_3d_lateral_highwater.toShape())
-
-    # Below here, approach is smudging the insole and profile definitions
-    # Crown contour curves: height from C1/C2 profile curves, Y-offset from insole crown curves.
-    # Tune shoulder height in last_profile.draw_crown_profiles() via shape_params.
-    _c1_fbc      = last_profile.profile_dwg.C1_profile_bc
-    _c1_poles_3d = [last_profile.sketch_profile.Placement.multVec(p) for p in _c1_fbc.getPoles()]
-    _c2_fbc      = last_profile.profile_dwg.C2_profile_bc
-    _c2_poles_3d = [last_profile.sketch_profile.Placement.multVec(p) for p in _c2_fbc.getPoles()]
-
-    _mc_poles = []
-    for _p in _c1_poles_3d:
-        _x_lookup = min(_p.x, _xs8_x)
-        try:
-            _y_med = hf.get_bspline_plane_intersection_new(
-                last_insole.insole_dwg.C1_insole_medial,
-                App.Vector(_x_lookup, 0, 0), hf.nX)[0].y
-        except IndexError:
-            _y_med = 0.0
-        _mc_poles.append(_p + App.Vector(0, _y_med, 0))
-
-    _lc_poles = []
-    for _p in _c2_poles_3d:
-        _x_lookup = min(_p.x, _xs8_x)
-        try:
-            _y_lat = hf.get_bspline_plane_intersection_new(
-                last_insole.insole_dwg.C2_insole_lateral,
-                App.Vector(_x_lookup, 0, 0), hf.nX)[0].y
-        except IndexError:
-            _y_lat = 0.0
-        _lc_poles.append(_p + App.Vector(0, _y_lat, 0))
-
-    bc_3d_medial_crown = Part.BSplineCurve()
-    bc_3d_medial_crown.buildFromPolesMultsKnots( _mc_poles, _c1_fbc.getMultiplicities(), _c1_fbc.getKnots(), False, _c1_fbc.Degree)
-    #bc_3d_medial_crown.buildFromPoles( _mc_poles, False,1,False)
-
-    bc_3d_lateral_crown = Part.BSplineCurve()
-    bc_3d_lateral_crown.buildFromPolesMultsKnots( _lc_poles, _c2_fbc.getMultiplicities(), _c2_fbc.getKnots(), False, _c2_fbc.Degree)
-    #bc_3d_lateral_crown.buildFromPoles( _lc_poles, False,1,False)
-
     bc_3d_edge_list.append(bc_3d_medial_crown.toShape())
     bc_3d_edge_list.append(bc_3d_lateral_crown.toShape())
 

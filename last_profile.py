@@ -128,7 +128,7 @@ class draw_profile_c:
         sketch.addGeometry(self.bottom_bc)
         # TODO: ratiometric offsets (see comments)
         self.front_bc.buildFromPoles([self.B1, self.B2+App.Vector(5,5,0),
-                                 self.J1+App.Vector(0,-10,0), self.H1, self.E],
+                                 self.J1, self.H1, self.E],
                                 False, 2, False)
         sketch.addGeometry(self.front_bc)
         self.top_bc.buildFromPoles([self.E, self.C5E_intercept, self.C5],

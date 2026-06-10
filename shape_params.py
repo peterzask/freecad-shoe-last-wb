@@ -5,15 +5,15 @@ from dataclasses import dataclass
 class shape_params_c:
     # --- Highwater curves: fraction along K->(midpoint of J1/H1) range ---
     hw_med_pct_instep:  float = 0.85   # medial highwater position near instep
-    hw_med_pct_joint:   float = 0.50   # medial highwater position near joint (J+pct*(J1-J))
+    hw_med_pct_joint:   float = 0.65   # medial highwater position near joint (J+pct*(J1-J))
     hw_lat_pct_instep:  float = 0.25   # lateral highwater position near instep
-    hw_lat_pct_joint:   float = 0.43   # lateral highwater position near joint (lateral flatter than medial)
+    hw_lat_pct_joint:   float = 0.55   # lateral highwater position near joint (lateral flatter than medial)
 
     # --- Crown shoulder: same fractional range, above highwater ---
     crown_med_pct_instep:  float = 0.92
-    crown_med_pct_joint:   float = 0.80
+    crown_med_pct_joint:   float = 0.92   # raised to match instep; lifts C1 at ball from 44->51mm
     crown_lat_pct_instep:  float = 0.70
-    crown_lat_pct_joint:   float = 0.65
+    crown_lat_pct_joint:   float = 0.80   # raised; lifts C2 at ball from 36->44mm
     crown_fraction:        float = 0.30  # width fraction placeholder — not yet wired to geometry
 
     # --- Insole crown curve Y-scale (relative to insole outline width) ---

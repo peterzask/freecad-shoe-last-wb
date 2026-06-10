@@ -11,9 +11,9 @@ class shape_params_c:
 
     # --- Crown shoulder: same fractional range, above highwater ---
     crown_med_pct_instep:  float = 0.92
-    crown_med_pct_joint:   float = 0.92   # raised to match instep; lifts C1 at ball from 44->51mm
+    crown_med_pct_joint:   float = 0.84   # 2/3 rollback from 0.92; joint+waist blended equally
     crown_lat_pct_instep:  float = 0.70
-    crown_lat_pct_joint:   float = 0.80   # raised; lifts C2 at ball from 36->44mm
+    crown_lat_pct_joint:   float = 0.72   # 2/3 rollback from 0.80
     crown_fraction:        float = 0.30  # width fraction placeholder — not yet wired to geometry
 
     # --- Insole crown curve Y-scale (relative to insole outline width) ---

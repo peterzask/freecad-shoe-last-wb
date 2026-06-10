@@ -180,7 +180,10 @@ _girth_shapes = []
 print("\n=== Girth check (deg-2 BSpline, post-scale) ===")
 print(f"  {'Section':<14}  {'Target':>8}  {'BSpline':>8}  {'Delta':>8}")
 for label, ring, target_mm in _girth_ring_data:
-    poles = ring[:-1]          # drop closing duplicate H2
+    # Drop closing H2, then prepend H2 again to double it — same reason CRISP_SOLE
+    # doubles H1: forces the degree-2 periodic BSpline to pass through H2 instead
+    # of cutting the corner inward at the lateral insole seam.
+    poles = [ring[0]] + list(ring[:-1])
     bc = Part.BSplineCurve()
     bc.buildFromPoles(poles, True, degree, False)   # periodic, same degree as surface
     arc_mm  = bc.length()

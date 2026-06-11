@@ -17,8 +17,8 @@ if True:
     importlib.reload(hf)
     importlib.reload(last_insole)
     importlib.reload(last_profile)
-    importlib.reload(control_curves)  # builds loci from profile curves + overrides
-    importlib.reload(xs_base)         # uses control_curves loci for intersections
+    importlib.reload(control_curves)  # reloads _OVERRIDES and build() definition
+    importlib.reload(xs_base)         # xs_base.build() calls control_curves.build() first
     for m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8]:
         importlib.reload(m)
 
@@ -54,6 +54,13 @@ xs_scalars_list = [
     xs_base.xs_4, xs_base.xs_5, xs_base.xs_6, xs_base.xs_7, xs_base.xs_8,
 ]
 
+# Per-section multiplier on c_scale and t_scale (applied on top of global values).
+# Use to nudge one section's girth without disturbing others.
+# Each 0.01 change moves girth by roughly 1-2mm (section-dependent).
+_SECTION_GIRTH_SCALE = {
+    'xs_4': 0.93,   # waist: pull crown/shoulder inward; target -15mm from +15.2mm excess
+}
+
 # Locked ring indices (H2 seam-start, H3, H1; seam-end added per-row)
 _LOCKED_PLAIN = frozenset([0, 1, 2])   # H2, H3, H1
 _LOCKED_CRISP = frozenset([0, 1, 2, 3])  # H2, H3, H1, H1(doubled)
@@ -77,11 +84,15 @@ def _apply_girth_scale(pts, h, c_scale, t_scale, crisp):
 
 # Transform each section's control points from sketch-local to global 3D
 # heel_end_row prepended so degree-2 u smooths through the heel — no separate heel cap needed
+_sec_names = ['xs_0','xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8']
 rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
-for (xs, placement), xs_sc in zip(xs_list, xs_scalars_list):
+for (xs, placement), xs_sc, sec_name in zip(xs_list, xs_scalars_list, _sec_names):
     pl = placement * hf.yz_xy_place
     pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
-    pts = _apply_girth_scale(pts, xs_sc.H, xs_base.C_SCALE, xs_base.T_SCALE, xs_base.CRISP_SOLE)
+    _sg  = _SECTION_GIRTH_SCALE.get(sec_name, 1.0)
+    pts = _apply_girth_scale(pts, xs_sc.H,
+                             xs_base.C_SCALE * _sg, xs_base.T_SCALE * _sg,
+                             xs_base.CRISP_SOLE)
     rows.append(pts)
 
 pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
@@ -150,7 +161,11 @@ toe_cap_shape = toe_nurb.toShape()
 last_shell = Part.makeShell([shoe_last_shape, toe_cap_shape])
 last_solid = Part.makeSolid(last_shell)
 last_solid = last_solid.removeSplitter()
-Part.show(last_solid)
+_solid_name = "ShoeLast"
+if App.ActiveDocument.getObject(_solid_name):
+    App.ActiveDocument.removeObject(_solid_name)
+_solid_obj = App.ActiveDocument.addObject("Part::Feature", _solid_name)
+_solid_obj.Shape = last_solid
 #Part.show(shoe_last_shape)
 #Part.show(heel_cap_shape)
 App.ActiveDocument.recompute()
@@ -199,7 +214,8 @@ _girth_name     = "GirthCheckRings"
 _g_obj = App.ActiveDocument.getObject(_girth_name) or \
          App.ActiveDocument.addObject("Part::Feature", _girth_name)
 _g_obj.Shape = _girth_compound
-print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  rings shown as '{_girth_name}'")
+_sg_str = "  ".join(f"{k}={v:.3f}" for k,v in _SECTION_GIRTH_SCALE.items()) or "none"
+print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  sec_girth_scale: {_sg_str}  rings='{_girth_name}'")
 print("=== positive delta = last larger than foot girth ===\n")
 
 print("\nThe end\n")

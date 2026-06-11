@@ -144,27 +144,36 @@ def compute_xs_scalars(placement: App.Placement,
     H1  = App.Vector(H.x, HH1, H.z)
     H2  = App.Vector(H.x, HH2, H.z)
 
-    g_T1 = App.Vector(hf.get_bspline_plane_intersection_new(
-               bc_3d_medial_highwater, origin, normal)[0])
+    try:
+        g_T1 = App.Vector(hf.get_bspline_plane_intersection_new(
+                   bc_3d_medial_highwater, origin, normal)[0])
+    except IndexError:
+        _raw = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.medial_highwater_bc)
+        g_T1 = App.Vector(hf.get_bspline_plane_intersection_new(_raw, origin, normal)[0])
     d_T1 = (g_T1 - g_H).dot(g_uHJ)
     if d_T1 >= d_HJ:
         d_T1 = d_HJ + (g_T1 - g_J).dot(gvec_uJB1)
     try:
         TT1 = hf.get_bspline_plane_intersection_new(
-                  last_insole.insole_dwg.bc_medial_last_outline,
+                  #last_insole.insole_dwg.bc_medial_last_outline,
+                  control_curves.bc_medial_last_outline,
                   App.Vector(C_x + d_T1, 0, 0), hf.nX)[0].y
     except IndexError:
         TT1 = HH1
     HT1 = (g_T1 - origin).dot(local_up)
 
-    g_T2 = App.Vector(hf.get_bspline_plane_intersection_new(
-               bc_3d_lateral_highwater, origin, normal)[0])
+    try:
+        g_T2 = App.Vector(hf.get_bspline_plane_intersection_new(
+                   bc_3d_lateral_highwater, origin, normal)[0])
+    except IndexError:
+        _raw = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.lateral_highwater_bc)
+        g_T2 = App.Vector(hf.get_bspline_plane_intersection_new(_raw, origin, normal)[0])
     d_T2 = (g_T2 - g_H).dot(g_uHJ)
     if d_T2 >= d_HJ:
         d_T2 = d_HJ + (g_T2 - g_J).dot(gvec_uJB1)
     try:
         TT2 = hf.get_bspline_plane_intersection_new(
-                  last_insole.insole_dwg.bc_lateral_last_outline,
+                  control_curves.bc_lateral_last_outline,
                   App.Vector(C_x + d_T2, 0, 0), hf.nX)[0].y
     except IndexError:
         TT2 = HH2
@@ -245,6 +254,9 @@ def build():
     CRISP_SOLE   = sp.shape_params.crisp_sole
     C_SCALE      = sp.shape_params.c_scale
     T_SCALE      = sp.shape_params.t_scale
+
+    # Build control loci now that last_profile has been freshly reloaded above.
+    control_curves.build()
 
     # --- Global direction vectors ---
     gvec_uHB  = hf.xz_xy_place * (last_profile.profile_dwg.B  - last_profile.profile_dwg.H).normalize()

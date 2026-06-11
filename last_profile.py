@@ -53,16 +53,6 @@ class profile_lengths_c:
 
 
 class draw_profile_c:
-    def __init__(self):
-        self.heel_bc              : Part.BSplineCurve = Part.BSplineCurve()
-        self.bottom_bc            : Part.BSplineCurve = Part.BSplineCurve()
-        self.front_bc             : Part.BSplineCurve = Part.BSplineCurve()
-        self.top_bc               : Part.BSplineCurve = Part.BSplineCurve()
-        self.medial_highwater_bc  : Part.BSplineCurve = Part.BSplineCurve()
-        self.lateral_highwater_bc : Part.BSplineCurve = Part.BSplineCurve()
-        self.C1_profile_bc        : Part.BSplineCurve = Part.BSplineCurve()
-        self.C2_profile_bc        : Part.BSplineCurve = Part.BSplineCurve()
-
     def build(self, PL: profile_lengths_c, sketch: "Sketcher::SketchObject"):
         # J at local origin; H to the left and up by heel raise AH
         self.J = App.Vector(0.0, 0.0, 0.0)
@@ -117,81 +107,6 @@ class draw_profile_c:
         local_K.y += 8
         local_K.z  = 0
         self.K = local_K
-
-    def draw_outline(self, sketch):
-        self.heel_bc.buildFromPoles([self.C5, self.H2+App.Vector(-5,0,0), self.H],
-                               False, 2, True)
-        sketch.addGeometry(self.heel_bc)
-        self.bottom_bc.buildFromPoles([self.H, self.K1, self.K,
-                                  self.J+App.Vector(0,-10,0), self.B1],
-                                 False, 2, True)
-        sketch.addGeometry(self.bottom_bc)
-        # TODO: ratiometric offsets (see comments)
-        self.front_bc.buildFromPoles([self.B1, self.B2+App.Vector(5,5,0),
-                                 self.J1, self.H1, self.E],
-                                False, 2, False)
-        sketch.addGeometry(self.front_bc)
-        self.top_bc.buildFromPoles([self.E, self.C5E_intercept, self.C5],
-                              False, 2, False)
-        sketch.addGeometry(self.top_bc)
-
-        self.front_top_bc = Part.BSplineCurve()
-        self.front_top_bc.buildFromPoles([self.B1, self.B2+App.Vector(5,5,0),
-                                 self.J1+App.Vector(0,-10,0), self.H1, self.E,
-                                 self.E, self.C5E_intercept, self.C5E_intercept, self.C5],
-                                False, 2, False)
-        sketch.addGeometry(self.front_top_bc)
-
-    def _build_highwater_poles(self, pct_instep: float, pct_joint: float):
-        Pa = self.K
-        Pb = self.J1 + (self.H1 - self.J1) * 2.0/3.0
-        return [self.H2,
-                self.H2 + App.Vector(60, -10, 0),
-                Pa + (Pb - Pa) * pct_instep,
-                self.J + (self.J1 - self.J) * pct_joint,
-                self.B1 + (self.B2 - self.B1) * 2.0/3.0]
-
-    def draw_highwater_medial(self, sketch, shape_p):
-        self.medial_highwater_bc = Part.BSplineCurve()
-        self.medial_highwater_bc.buildFromPoles(
-            self._build_highwater_poles(shape_p.hw_med_pct_instep,
-                                        shape_p.hw_med_pct_joint),
-            False, 3, False)
-
-    def draw_highwater_lateral(self, sketch, shape_p):
-        self.lateral_highwater_bc = Part.BSplineCurve()
-        self.lateral_highwater_bc.buildFromPoles(
-            self._build_highwater_poles(shape_p.hw_lat_pct_instep,
-                                        shape_p.hw_lat_pct_joint),
-            False, 3, False)
-
-    def draw_crown_profiles(self, sketch, shape_p):
-        degree = 2
-        Pa = self.K
-        Pb = self.J1 + (self.H1 - self.J1) * 2.0/3.0
-        toe_anchor = self.B1 + (self.B2 - self.B1) * 2.0/3.0
-
-        poles_c1 = [
-            toe_anchor,
-            self.J  + (self.J1  - self.J)  * shape_p.crown_med_pct_joint,
-            Pa      + (Pb       - Pa)       * shape_p.crown_med_pct_instep,
-            self.E,
-            self.E,
-            self.C5,
-        ]
-        self.C1_profile_bc.buildFromPoles(poles_c1, False, degree, False)
-        sketch.addGeometry(self.C1_profile_bc)
-
-        poles_c2 = [
-            toe_anchor,
-            self.J  + (self.J1  - self.J)  * shape_p.crown_lat_pct_joint,
-            Pa      + (Pb       - Pa)       * shape_p.crown_lat_pct_instep,
-            self.E,
-            self.E,
-            self.C5,
-        ]
-        self.C2_profile_bc.buildFromPoles(poles_c2, False, degree, False)
-        sketch.addGeometry(self.C2_profile_bc)
 
     def draw_circles(self, sketch: "Sketcher::SketchObject"):
         sketch.addGeometry(Part.Circle(self.H,             hf.nZ, 2.0))
@@ -255,10 +170,6 @@ def build():
 
     profile_dwg.compute_K(last_insole.insole_dwg, sketch_profile.Placement)
 
-    profile_dwg.draw_outline(sketch_profile)
-    profile_dwg.draw_highwater_medial(sketch_profile, sp.shape_params)
-    profile_dwg.draw_highwater_lateral(sketch_profile, sp.shape_params)
-    profile_dwg.draw_crown_profiles(sketch_profile, sp.shape_params)
     profile_dwg.draw_circles(sketch_profile)
 
 

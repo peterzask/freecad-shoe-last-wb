@@ -133,6 +133,8 @@ def build_xs_plane_pi(plane_name:str, plane_place: App.Placement, display_on: bo
     if display_on == False: return
     width  = 100
     height = 83
+    # makePlane(length,width,[pnt,dirZ,dirX]) -- Make a plane
+    # By default pnt=Vector(0,0,0) and dirZ=Vector(0,0,1), dirX is ignored in this case
     plane_shape = Part.makePlane(width, height, App.Vector(-width/2,0,0), hf.nZ, hf.nX)
     plane_object = doc.addObject("Part::Feature", plane_name)
     plane_object.Shape = plane_shape

@@ -283,8 +283,7 @@ C1              , C      ,   C2 , Toe patch
 
 # NOTES on cross-section stations:
 # xs_0: first heel section
-# xs_1: second heel section
-# xs_2 K1 to crown, normal to K1->E
+# xs_1: second heel section # xs_2 K1 to crown, normal to K1->E
 # xs_3 instep: 1/2 of J1-H1
 # xs_4 waist: 1/2 between joint cross section and the instep cross section
 #  on line J->E, same normal as instep
@@ -292,3 +291,125 @@ C1              , C      ,   C2 , Toe patch
 # xs_6 1/3 of J->B1 (toe cap line), located on J->B1 line and perpendicular to J->B1 and in x-z plane 
 # xs_7 2/3 of J->B1 
 # xs_8 end of toes (foot length)
+                                                                                                                   
+(The following is in progress.)
+Conceptual Design Notes: R. Grabbe                                    E                                            
+                                                        _______________     H1                                     
+                                               ________/               \_______                                    
+                                              |                           __|  \__                                 
+                                              |                       ___/        \__                               
+                                             /                    ___/               \_                             
+                                  H          |                 __/                     \__                          
+                                  e          |             ___/                           \__ J1                    
+                                  e          |          __/                                  \____________________ 
+                                  l           \     ___/                                                         |  Last
+                                              | ___/                                                             |  Toe
+                                              |/                         ________                                |
+                                             H|_________________________/        \_______________________________|
+                                                                                       J
+Conceptual Design Notes: R. Grabbe 
+A Last creates a "cage" built by the H->H1->J1->J->H polygon that holds the foot 
+into the heel of the shoe so it doesn't slide forward during a stride except for arch length extension.
+The cage's  outline, more verbosely, is the line from the Heel (H), to the short heel point (H1),
+down the instep to the top of the joint (J1) down to the bottom of the joint (J) and back to the heel along the the
+bottom curve of the last (bottom_bc - bottom BSplineCurve) that holds the foot. 
+
+The top of the line from H1 down to J1 is later hand drawn-in to show a crown on top of the instep
+(a 1/8" crown bulge at mid J1-H1 xs_3), a slight convexity (centered at waist xs_4), finishing at J1 (xs_5). 
+
+My insight is that, from the crown shape of this region, all snugness of fit is accomplished with the bottom shape
+of the last pressing the foot up into the crown, the fit being tighter along the plantar tread of the foot.
+The plantar tread of the foot is accustomed to holding weight. 
+The curved shape
+last have from J1 to H accomdates this. Salvatore Ferragammo talks about this in the 4th paragraph on page 69 in his book. "The foot
+in a shoe is supported by the thins sliver along the lateral side of the plantar surface of the foot when standing. This
+support follows down along vertical line through the ankle downto this portion of the foot."  I think, like setting your foot on a 
+volley ball so only this portion is supported and the heel an ball are suspended in air. With your
+foot on a volley ball, tilt it forward as if in a 3" 12 cm heel, it supports your foot without bearing on ball or heel.
+This area pressing your
+foot into the instep slope held by heel and ball girths keeps the foot from slidding into the shoe. Although, the arch
+streaches in length on each step and your toes move forward 8-12 mm on each stride. Hence, shoes that are 12 - 18 mm longer
+depending on usage.
+
+The shape of this cage, using a 37-degree angle from H-B to H-H1, J dropping down to the ground and j1 
+
+The intuitions G. Koleff uses to size the widths and heights of these regions are held precedent. as it is
+a full inch / 25.4 mm larger in perimeter than the joint's girth. This size adequacy is shown next.
+
+Extending the last above J1 allows the foot to slip forward in the shoe. 
+For a girth of 11", here are the calculations.
+                                                     < 1.33" ><    2.67"   >
+xs_5           +----------------------+                     +-------+   
+               |perimeter = 12.5"     |              +------+   ^   +----+       Circumference = 11.139"
+ J1 = 55.9 mm  |          = 318 mm    |              | 1.5    2.2     1.0+--+
+    = 2.2"     |                      |              |          v           |
+               +----------------------+              +- --------------------+
+                      W = 103 mm  = 4.05"                       4.05"
+Joint Fit: for my foot, joint is 11" = 279.4 mm
+    J1 height is calculated by Koleff as joint_girth / 5.0.
+    J to J1 = 279.4/5 = 55.9
+    Joint Width = 279.4/3 + 10mm = 103.1 mm
+    Max size using rectangle: 2*103.1 + 2*55.9 = 318.1 mm = 12 4.2/8 " = 12.5", oversized by 1.5"
+
+Thus the controlling size curves for this region are T1 C1 C=J1 C2 T2. Adjust these to follow the shape of the foot
+across the joint, not changing J1 (C) location. To obtain the waist measurement, curve the bottom_bc up more behind the
+ball of the foot xs_4, same with the instep xs_3. And follow back to xs_2 similarly, but maintain xs_1 and xs_0's bottom
+heights.
+
+
+Termination of insole control curves:
+insole
+Toe shape:
+
+The insole shape and front_top_curve shape the last's toe area. Use the insole shape to make round, square, french,
+or different points by extending it forward by 4 to 8 mm.
+The top curve  front_top_bc shape the toe's sloping profile down to the insole tip  and are the only curve that terminates on the insole's tip. 
+All others are trimmed to and terminate into the toe-end patch. 
+
+                (Right)Front view;                                      (Front) Lateral side view of toe patch
+                        Toe Patch                                             Toe Patch
+                                                                                         
+                             C                                                           
+                             |                                                           
+                             |                                              C     ------  
+                             |                                                          \  
+  L      C2 -----------+-----+----+----------- C1   M                    C1,C2     --------
+  a                    |     |    |                 e                                      \
+  t      T2 -----------+     |    +----------- T1   d                    T1,T2     ---------\ 
+  e                    |     |    |                 i                                        |    
+  r                    |     |    |                 a                                        | 
+  a                    |     |    |                 l                                         \
+  l                    |     |    |                                                           |
+                       |     |    |                                                           |
+                       |     |    |                                                           |
+         H2------------+-----+----+----------- H1                         H1,H2     ----------+
+                             |
+                             H
+
+In FreeCAD 3d view, move the view cube in upper left corner of display to "Right" for Front view.
+                            '          '                               to "Front" to see Lateral side view.
+
+
+
+
+
+
+
+
+
+
+
+Clipboard
+I coin the verticle line intersecting the ankle
+
+
+
+
+
+
+
+
+
+
+
+

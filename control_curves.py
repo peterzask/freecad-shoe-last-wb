@@ -44,7 +44,7 @@ print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})
 """
 # Profile curves  (XZ plane -> 3D via sketch_profile.Placement):
 #   (define bc - 'B'spline'C'urve)
-#   bottom_bc, heel_bc, front_bc, front_top_bc, top_bc  — profile outline
+#   bottom_bc, heel_bc, front_top_bc, top_bc  — profile outline
 #   medial_highwater_bc, lateral_highwater_bc            — T1/T2 height loci
 #   C1_profile_bc, C2_profile_bc                        — crown shoulder height loci
 #
@@ -85,6 +85,8 @@ medial_highwater_bc     = None
 lateral_highwater_bc    = None
 # Row 5: C — profile top (XZ)
 front_top_bc            = None # and x-z plane
+bc_C_locus              = None  # 2D profile: C crown locus heel→toe (C5→E→J1→B2)
+center_crown_locus      = None  # 3D interpolating locus for HC per section
 
 # Rows 6 & 7: C1/C2 — crown shoulder (XY + XZ)
 C1_insole_medial        = None
@@ -100,8 +102,7 @@ medial_crown_locus      = None
 lateral_crown_locus     = None
 # missing loci: front_top_locus , bottom_locus, heel_bc_locus
 
-top_bc                  = None   # Redundant because of front_top_bc 
-front_bc                = None   # Redundant because of front_top_bc
+top_bc                  = None   # Redundant because of front_top_bc
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -216,10 +217,10 @@ def build():
     global bc_medial_last_outline, bc_lateral_last_outline
     global medial_highwater_bc, lateral_highwater_bc
     global top_bc                                                         #top_bc should be extinct, replaced by front_top_bc 
-    global insole_bc_medial, insole_bc_lateral, bottom_bc, front_bc, front_top_bc  #front_bc is extinct, replaced by front_top_bc
+    global insole_bc_medial, insole_bc_lateral, bottom_bc, front_top_bc, bc_C_locus
     global C1_insole_medial, C2_insole_lateral, C1_profile_bc, C2_profile_bc
     global heel_bc
-    global medial_hw_locus, lateral_hw_locus, medial_crown_locus, lateral_crown_locus
+    global medial_hw_locus, lateral_hw_locus, center_crown_locus, medial_crown_locus, lateral_crown_locus
 
     pd      = last_profile.profile_dwg
     idw     = last_insole.insole_dwg
@@ -313,7 +314,7 @@ def build():
 
     #sandbox 2A start
     #Row 2 Input curve 
-    if Draw_Sketch_Overlay_Lateral_Last_Outline:=True:
+    if Draw_Sketch_Overlay_Lateral_Last_Outline:=False:
         sketch_name = "sketch_insole_overlay"
         doc,sketch_io = hf.Doc_Sketch(last_insole.doc,sketch_name)
         _pt_list =  [D_t, B2_t, pinky, idw.J2, lat_K, H2_t, lC3, A0]
@@ -338,7 +339,7 @@ def build():
     ], False, 3, False)
     #sandbox 2B start
     #Row 2 Input curve
-    if Draw_Sketch_Overlay_Lateral_Highwater:=True:
+    if Draw_Sketch_Overlay_Lateral_Highwater:=False:
         sketch_name = "sketch_profile_overlay"
         doc,sketch_po = hf.Doc_Sketch(last_insole.doc,sketch_name)
         _pt_list = [pd.H2, pd.H2 + App.Vector(60, -10, 0), Pa + (Pb - Pa) * sp_p.hw_lat_pct_instep,
@@ -364,6 +365,29 @@ def build():
     top_bc = Part.BSplineCurve()
     top_bc.buildFromPoles([pd.E, pd.C5E_intercept, pd.C5], False, 2, False)
 
+    # XZ: C crown locus — heel to toe, double pole at E for table-top crispness
+    bc_C_locus = Part.BSplineCurve()
+    bc_C_locus.buildFromPoles(
+        [pd.C5, pd.C5E_intercept, pd.E, pd.E, pd.J1, pd.J1, pd.B2],
+        False, 2, False)
+    #sandbox 5A start
+    #Row 5 Input curve. C crown locus poles in profile (XZ) plane.
+    if Draw_Sketch_bc_C_locus:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = bc_C_locus.getPoles()
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["pd.C5", "pd.C5E_intercept", "pd.E", "pd.E", "pd.J1", "pd.J1", "pd.B2"]
+        k = 0
+        print("**********bc_C_locus Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(bc_C_locus)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 5A stop
+
     # =========================================================================
     # Rows 3 & 4: H1/H2 — insole outline (XY) + profile bottom (XZ)
     # =========================================================================
@@ -377,10 +401,42 @@ def build():
     insole_bc_medial = Part.BSplineCurve()
     insole_bc_medial.buildFromPoles(
         [idw.C, iC2, idw.H1, K2, idw.J1, idw.B1, idw.D], False, 2, False)
+    #sandbox 3B start
+    #Row 3 Input curve. Insole medial outline poles (XY).
+    if Draw_Sketch_insole_bc_medial:=False:
+        sketch_name = "sketch_insole_overlay"
+        doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = [idw.C, iC2, idw.H1, K2, idw.J1, idw.B1, idw.D]
+        for p in _pt_list:
+            sketch_io.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["idw.C", "iC2", "idw.H1", "K2", "idw.J1", "idw.B1", "idw.D"]
+        k = 0
+        print("**********insole_bc_medial Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_io.addGeometry(insole_bc_medial)
+    #sandbox 3B stop
 
     insole_bc_lateral = Part.BSplineCurve()
     insole_bc_lateral.buildFromPoles(
         [idw.D, idw.B2, idw.J2, extra_K, idw.H2, iC3, idw.C], False, 2, False)
+    #sandbox 4A start
+    #Row 4 Input curve. Insole lateral outline poles (XY).
+    if Draw_Sketch_insole_bc_lateral:=False:
+        sketch_name = "sketch_insole_overlay"
+        doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = [idw.D, idw.B2, idw.J2, extra_K, idw.H2, iC3, idw.C]
+        for p in _pt_list:
+            sketch_io.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["idw.D", "idw.B2", "idw.J2", "extra_K", "idw.H2", "iC3", "idw.C"]
+        k = 0
+        print("**********insole_bc_lateral Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_io.addGeometry(insole_bc_lateral)
+    #sandbox 4A stop
 
     # full combined insole outline (xs_0/xs_1/xs_3 look up Y-width here)
     _outline_bc = Part.BSplineCurve()
@@ -394,17 +450,49 @@ def build():
     bottom_bc.buildFromPoles(
         [pd.H, pd.K1, pd.K, pd.J + App.Vector(0, -10, 0), pd.B1],
         False, 2, True)
-
-    front_bc = Part.BSplineCurve()
-    front_bc.interpolate(
-        [pd.B1, pd.B2 + App.Vector(-5, 5, 0), pd.J1, pd.H1, pd.E])
+    #sandbox 3A start
+    #Row 3/4 Input curve. Profile bottom curve poles (XZ).
+    if Draw_Sketch_bottom_bc:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = [pd.H, pd.K1, pd.K, pd.J + App.Vector(0, -10, 0), pd.B1]
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["pd.H", "pd.K1", "pd.K", "pd.J+(0,-10,0)", "pd.B1"]
+        k = 0
+        print("**********bottom_bc Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(bottom_bc)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 3A stop
 
     front_top_bc = Part.BSplineCurve()
     front_top_bc.buildFromPoles(
-        [pd.B1, pd.B2 + App.Vector(-5, 5, 0),
-         pd.J1 + App.Vector(0, -10, 0), pd.H1, pd.E,
+        [pd.B1, pd.B2 + App.Vector(-5, 0, 0),
+         pd.J1, pd.H1, pd.E,
          pd.E, pd.C5E_intercept, pd.C5E_intercept, pd.C5],
         False, 2, False)
+    #sandbox 5B start
+    #Row 5 Input curve. Profile front+top curve poles (XZ).
+    if Draw_Sketch_front_top_bc:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = [pd.B1, pd.B2 + App.Vector(-5, 0, 0), pd.J1, pd.H1, pd.E,
+                    pd.E, pd.C5E_intercept, pd.C5E_intercept, pd.C5]
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["pd.B1", "pd.B2+(-5,0,0)", "pd.J1", "pd.H1", "pd.E",
+                      "pd.E", "pd.C5E_intercept", "pd.C5E_intercept", "pd.C5"]
+        k = 0
+        print("**********front_top_bc Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(front_top_bc)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 5B stop
 
     # =========================================================================
     # Rows 6 & 7: C1/C2 — crown shoulder (XY + XZ)
@@ -424,16 +512,39 @@ def build():
     _ic_x = ft_meas.heel * 0.9 / 2 * cosd - 10
 
     C1_insole_medial = Part.BSplineCurve()
-    C1_insole_medial.buildFromPoles([
-        App.Vector(idw.C.x,        0,                         0),
+    C1_insole_medial_poles = [    App.Vector(idw.C.x,        0,                         0),
         App.Vector(iC2.x,          12.5,                      0),
         App.Vector(idw.H1.x,       12.5,                      0),
         App.Vector(_ic_x,          12.5,                      0),
         App.Vector(idw.J1.x - 20,  idw.J1.y * _crown_med_cf, 0),
         App.Vector(idw.J1.x + 10,  idw.J1.y * _crown_med_cf, 0),
         App.Vector(idw.B1.x,       idw.B1.y * _crown_med_cf, 0),
-        App.Vector(idw.D.x,        0,                         0),
-    ], False, 2, False)
+        App.Vector(idw.D.x,        0,                         0)]
+    C1_insole_medial.buildFromPoles(C1_insole_medial_poles , False, 2, False)
+    #sandbox 6A start
+    #Row 2 Input curve 
+    if Draw_Sketch_Overlay_insole_medial:=True:
+        sketch_name = "sketch_insole_overlay"
+        doc,sketch_io = hf.Doc_Sketch(last_insole.doc,sketch_name)
+        _pt_list = C1_insole_medial_poles 
+        for p in _pt_list:
+            sketch_io.addGeometry(Part.Circle(p,hf.nZ,2.0))
+        _name_list = C1_insole_medial_poles = ["App.Vector(idw.C.x,0,0)\n",
+        "App.Vector(iC2.x,          12.5,0)",
+        "App.Vector(idw.H1.x,       12.5,0)",
+        "App.Vector(_ic_x,          12.5,0)",
+        "App.Vector(idw.J1.x - 20,  idw.J1.y * _crown_med_cf, 0)",
+        "App.Vector(idw.J1.x + 10,  idw.J1.y * _crown_med_cf, 0)",
+        "App.Vector(idw.B1.x,       idw.B1.y * _crown_med_cf, 0)",
+        "App.Vector(idw.D.x,        0,0)"]
+
+        k=0
+        print("**********Lateral Last Outline Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p,f"{_name_list[k]}")
+            k+=1
+        sketch_io.addGeometry(bc_lateral_last_outline)
+    #sandbox 6A stop
 
     C2_insole_lateral = Part.BSplineCurve()
     C2_insole_lateral.buildFromPoles([
@@ -446,6 +557,23 @@ def build():
         App.Vector(iC3.x,          -12.5,                     0),
         App.Vector(idw.C.x,        0,                         0),
     ], False, 2, False)
+    #sandbox 7A start
+    #Row 7 Input curve. C2 insole lateral crown poles (XY).
+    if Draw_Sketch_C2_insole_lateral:=False:
+        sketch_name = "sketch_insole_overlay"
+        doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = C2_insole_lateral.getPoles()
+        for p in _pt_list:
+            sketch_io.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["D.x/0", "B2.x/lat*cf", "J2.x+10/lat*cf", "J2.x-10/lat*cf",
+                      "_ic_x/-12.5", "H2.x/-12.5", "iC3.x/-12.5", "C.x/0"]
+        k = 0
+        print("**********C2_insole_lateral Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_io.addGeometry(C2_insole_lateral)
+    #sandbox 7A stop
 
     # XZ: crown shoulder profile medial / lateral (C1/C2 Z-height loci)
     _Pa  = pd.K
@@ -459,6 +587,23 @@ def build():
         _Pa  + (_Pb  - _Pa)   * _crown_med_pct_instep,
         pd.E, pd.E, pd.C5,
     ], False, 2, False)
+    #sandbox 6B start
+    #Row 6 Input curve. C1 medial crown shoulder height profile poles (XZ).
+    if Draw_Sketch_C1_profile_bc:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = C1_profile_bc.getPoles()
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["_toe", "J+med_pct_joint", "_Pa+med_pct_instep", "pd.E", "pd.E", "pd.C5"]
+        k = 0
+        print("**********C1_profile_bc Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(C1_profile_bc)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 6B stop
 
     C2_profile_bc = Part.BSplineCurve()
     C2_profile_bc.buildFromPoles([
@@ -467,6 +612,23 @@ def build():
         _Pa  + (_Pb  - _Pa)   * _crown_lat_pct_instep,
         pd.E, pd.E, pd.C5,
     ], False, 2, False)
+    #sandbox 7B start
+    #Row 7 Input curve. C2 lateral crown shoulder height profile poles (XZ).
+    if Draw_Sketch_C2_profile_bc:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = C2_profile_bc.getPoles()
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["_toe", "J+lat_pct_joint", "_Pa+lat_pct_instep", "pd.E", "pd.E", "pd.C5"]
+        k = 0
+        print("**********C2_profile_bc Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(C2_profile_bc)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 7B stop
 
     # =========================================================================
     # Row 8: Heel — heel profile (XZ)
@@ -476,13 +638,29 @@ def build():
     heel_bc = Part.BSplineCurve()
     heel_bc.buildFromPoles(
         [pd.C5, pd.H2 + App.Vector(-5, 0, 0), pd.H], False, 2, True)
+    #sandbox 8A start
+    #Row 8 Input curve. Heel profile poles (XZ).
+    if Draw_Sketch_heel_bc:=False:
+        sketch_name = "sketch_profile_overlay"
+        doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        _pt_list = heel_bc.getPoles()
+        for p in _pt_list:
+            sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
+        _name_list = ["pd.C5", "H2+(-5,0,0)", "pd.H"]
+        k = 0
+        print("**********heel_bc Control Points*************************************")
+        for p in _pt_list:
+            hf.p_vec(p, f"{_name_list[k]}")
+            k += 1
+        sketch_po.addGeometry(heel_bc)
+        sketch_po.Placement = last_profile.sketch_profile.Placement
+    #sandbox 8A stop
 
     # =========================================================================
     # Back-assign to profile_dwg / insole_dwg for xs_*.py compatibility
     # =========================================================================
     pd.heel_bc              = heel_bc
     pd.bottom_bc            = bottom_bc
-    pd.front_bc             = front_bc
     pd.front_top_bc         = front_top_bc
     pd.top_bc               = top_bc
     pd.medial_highwater_bc  = medial_highwater_bc
@@ -502,8 +680,8 @@ def build():
     _show_compound([
         _bc_to_3d(heel_bc).toShape(),
         _bc_to_3d(bottom_bc).toShape(),
-        _bc_to_3d(front_bc).toShape(),
-        _bc_to_3d(top_bc).toShape(),
+        _bc_to_3d(front_top_bc).toShape(),
+        _bc_to_3d(bc_C_locus).toShape(),
         _bc_to_3d(medial_highwater_bc).toShape(),
         _bc_to_3d(lateral_highwater_bc).toShape(),
         _bc_to_3d(C1_profile_bc).toShape(),
@@ -524,19 +702,21 @@ def build():
     # =========================================================================
     bc_hw_med    = _bc_to_3d(medial_highwater_bc)
     bc_hw_lat    = _bc_to_3d(lateral_highwater_bc)
+    bc_cr_cen_3d = _bc_to_3d(bc_C_locus)
     bc_cr_med_3d = _build_crown_3d(C1_profile_bc, C1_insole_medial,  xs8_x)
     bc_cr_lat_3d = _build_crown_3d(C2_profile_bc, C2_insole_lateral, xs8_x)
 
-    T1_pts, T2_pts, C1_pts, C2_pts = [], [], [], []
+    T1_pts, T2_pts, C_pts, C1_pts, C2_pts = [], [], [], [], []
 
     print("\n=== Control loci heights mm (above H, local_up) ===")
-    print(f"  {'Section':<8}  {'HT1':>7}  {'HT2':>7}  {'HC1':>7}  {'HC2':>7}")
+    print(f"  {'Section':<8}  {'HT1':>7}  {'HT2':>7}  {'HC':>7}  {'HC1':>7}  {'HC2':>7}")
 
     for name, origin, normal, local_up in sections:
         ovr = _OVERRIDES.get(name, {})
 
         HT1_0, g_T1 = _intersect_height(bc_hw_med,    origin, normal, local_up)
         HT2_0, g_T2 = _intersect_height(bc_hw_lat,    origin, normal, local_up)
+        HC_0,  g_C_ = _intersect_height(bc_cr_cen_3d, origin, normal, local_up)
         HC1_0, g_C1 = _intersect_height(bc_cr_med_3d, origin, normal, local_up)
         HC2_0, g_C2 = _intersect_height(bc_cr_lat_3d, origin, normal, local_up)
 
@@ -546,14 +726,16 @@ def build():
 
         HT1 = _resolve(ovr.get('HT1', HT1_0), HT1_0)
         HT2 = _resolve(ovr.get('HT2', HT2_0), HT2_0)
-        HC1 = _resolve(ovr.get('HC1', HC1_0), HC1_0)
-        HC2 = _resolve(ovr.get('HC2', HC2_0), HC2_0)
+        HC  = _resolve(ovr.get('HC',  HC_0),  HC_0)
+        HC1 = min(_resolve(ovr.get('HC1', HC1_0), HC1_0), HC)
+        HC2 = min(_resolve(ovr.get('HC2', HC2_0), HC2_0), HC)
 
         flag = '*' if name in _OVERRIDES else ' '
-        print(f" {flag}{name:<7}  {HT1:>7.2f}  {HT2:>7.2f}  {HC1:>7.2f}  {HC2:>7.2f}")
+        print(f" {flag}{name:<7}  {HT1:>7.2f}  {HT2:>7.2f}  {HC:>7.2f}  {HC1:>7.2f}  {HC2:>7.2f}")
 
         T1_pts.append(_adjust_height(g_T1, origin, local_up, HT1) if g_T1 else origin)
         T2_pts.append(_adjust_height(g_T2, origin, local_up, HT2) if g_T2 else origin)
+        C_pts.append( _adjust_height(g_C_, origin, local_up, HC)  if g_C_ else origin)
         C1_pts.append(_adjust_height(g_C1, origin, local_up, HC1) if g_C1 else origin)
         C2_pts.append(_adjust_height(g_C2, origin, local_up, HC2) if g_C2 else origin)
 
@@ -561,11 +743,13 @@ def build():
 
     medial_hw_locus     = Part.BSplineCurve(); medial_hw_locus.interpolate(T1_pts)     # nyet
     lateral_hw_locus    = Part.BSplineCurve(); lateral_hw_locus.interpolate(T2_pts)
+    center_crown_locus  = Part.BSplineCurve(); center_crown_locus.interpolate(C_pts)
     medial_crown_locus  = Part.BSplineCurve(); medial_crown_locus.interpolate(C1_pts)
     lateral_crown_locus = Part.BSplineCurve(); lateral_crown_locus.interpolate(C2_pts)
 
     _show_compound([
         medial_hw_locus.toShape(), lateral_hw_locus.toShape(),
+        center_crown_locus.toShape(),
         medial_crown_locus.toShape(), lateral_crown_locus.toShape(),
     ], "ControlCurveLoci")
 

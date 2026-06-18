@@ -28,19 +28,7 @@ class xs_7_lens_c:
     def __init__(self, p_lens:     last_profile.profile_lengths_c,
                        insole_dwg:  last_insole.insole_layout,
                        profile_dwg: last_profile.draw_profile_c):
-        # HC from front_bc/xs_7 plane intersection in global 3D
-        poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in profile_dwg.front_bc.getPoles()]
-        front_bc_3d = Part.BSplineCurve()
-        front_bc_3d.buildFromPolesMultsKnots(
-            poles_3d,
-            profile_dwg.front_bc.getMultiplicities(),
-            profile_dwg.front_bc.getKnots(),
-            False, profile_dwg.front_bc.Degree)
-        g_C = hf.get_bspline_plane_intersection_new(
-            front_bc_3d, xs_base.xs_7_placement.Base, xs_base.gvec_uJB1)[0]
-        hf.p_vec(g_C, "xs_7 g_C")
-        self.HC  = (g_C - xs_base.xs_7_placement.Base).dot(xs_base.gvec_uJB1_localY)
+        self.HC  = xs_base.xs_7.HC
         self.CC1 = xs_base.xs_7.CC1
         self.CC2 = xs_base.xs_7.CC2
         self.HC1 = xs_base.xs_7.HC1

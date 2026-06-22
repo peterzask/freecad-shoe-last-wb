@@ -394,12 +394,11 @@ def build():
 
     _hw_isects  = control_curves.front_top_bc.intersect(control_curves.medial_highwater_bc)
     _c1_isects  = control_curves.front_top_bc.intersect(control_curves.C1_profile_bc)
-    _c_isects   = control_curves.front_top_bc.intersect(control_curves.bc_C_locus)
     _c2_isects  = control_curves.front_top_bc.intersect(control_curves.C2_profile_bc)
 
     _hw3    = _prof_to_3d(_hw_isects[0])
     _c1_3   = _prof_to_3d(_c1_isects[1])
-    _c_3    = _prof_to_3d(_c_isects[0])
+    _c_3    = App.Vector(g_B2)             # B2 is the endpoint of bc_C_locus — toe center crown
     _c2_3   = _prof_to_3d(_c2_isects[1])
 
     print(f"toe_end_row  hw={_hw3}  C={_c_3}  C1={_c1_3}  C2={_c2_3}  B1={g_B1}")

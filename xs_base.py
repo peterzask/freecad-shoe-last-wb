@@ -398,8 +398,9 @@ def build():
 
     _hw3    = _prof_to_3d(_hw_isects[0])
     _c1_3   = _prof_to_3d(_c1_isects[1])
-    _c_3    = App.Vector(g_B2)             # B2 is the endpoint of bc_C_locus — toe center crown
     _c2_3   = _prof_to_3d(_c2_isects[1])
+    # C converges with C1/C2 at toe end (crown and shoulders meet); use C1's height
+    _c_3    = App.Vector(_c1_3.x, 0, _c1_3.z)
 
     print(f"toe_end_row  hw={_hw3}  C={_c_3}  C1={_c1_3}  C2={_c2_3}  B1={g_B1}")
 

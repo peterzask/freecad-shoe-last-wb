@@ -58,8 +58,9 @@ xs_scalars_list = [
 # Use to nudge one section's girth without disturbing others.
 # Each 0.01 change moves girth by roughly 1-2mm (section-dependent).
 _SECTION_GIRTH_SCALE = {
-    'xs_4': 0.93,   # waist: pull crown/shoulder inward; target -15mm from +15.2mm excess
+    'xs_4': 1.0,   # waist: pull crown/shoulder inward; target -15mm from +15.2mm excess
 }
+#'xs_4': 0.93,   # waist: pull crown/shoulder inward; target -15mm from +15.2mm excess
 
 # Locked ring indices (H2 seam-start, H3, H1; seam-end added per-row)
 _LOCKED_PLAIN = frozenset([0, 1, 2])   # H2, H3, H1
@@ -89,32 +90,34 @@ rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
 for (xs, placement), xs_sc, sec_name in zip(xs_list, xs_scalars_list, _sec_names):
     pl = placement * hf.yz_xy_place
     pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
-    _sg  = _SECTION_GIRTH_SCALE.get(sec_name, 1.0)
-    pts = _apply_girth_scale(pts, xs_sc.H,
-                             xs_base.C_SCALE * _sg, xs_base.T_SCALE * _sg,
-                             xs_base.CRISP_SOLE)
+    if False:
+        _sg  = _SECTION_GIRTH_SCALE.get(sec_name, 1.0)
+        pts = _apply_girth_scale(pts, xs_sc.H,
+                                 xs_base.C_SCALE * _sg, xs_base.T_SCALE * _sg,
+                                 xs_base.CRISP_SOLE)
     rows.append(pts)
 
-pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
-rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_sole=xs_base.CRISP_SOLE)])
+rows.append(list(xs_base.xs_toe_end_row))
 
 u_count = len(rows)    # 11: heel_end + 9 sections + toe_end
 v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 H2
-print(f"u_count={u_count}, v_count={v_count}")
+#print(f"u_count={u_count}, v_count={v_count}")
 
 # Show scaled control points as vertex markers (rows 1–9, skipping heel_end and toe_end)
-if xs_base.C_SCALE != 1.0 or xs_base.T_SCALE != 1.0:
-    _ctrl_verts = [Part.Vertex(pt) for row in rows[1:-1] for pt in row]
-    _ctrl_compound = Part.makeCompound(_ctrl_verts)
-    _ctrl_name = "GirthScaleCtrlPts"
-    if App.ActiveDocument.getObject(_ctrl_name):
-        App.ActiveDocument.removeObject(_ctrl_name)
-    _ctrl_obj = App.ActiveDocument.addObject("Part::Feature", _ctrl_name)
-    _ctrl_obj.Shape = _ctrl_compound
+if False:
+    if xs_base.C_SCALE != 1.0 or xs_base.T_SCALE != 1.0:
+        _ctrl_verts = [Part.Vertex(pt) for row in rows[1:-1] for pt in row]
+        _ctrl_compound = Part.makeCompound(_ctrl_verts)
+        _ctrl_name = "GirthScaleCtrlPts"
+        if App.ActiveDocument.getObject(_ctrl_name):
+            App.ActiveDocument.removeObject(_ctrl_name)
+        _ctrl_obj = App.ActiveDocument.addObject("Part::Feature", _ctrl_name)
+        _ctrl_obj.Shape = _ctrl_compound
 
-for u, row in enumerate(rows):
-    for v, pv in enumerate(row):
-        hf.p_vec(pv, f"  [{u},{v}]")
+if False:
+    for u, row in enumerate(rows):
+        for v, pv in enumerate(row):
+            hf.p_vec(pv, f"  [{u},{v}]")
 
 # Chord-length parameterization in u along the C-point spine (C is at v_count//2 + 1)
 C_idx = v_count // 2 + 1
@@ -143,80 +146,83 @@ nurb.buildFromPolesMultsKnots(
     udegree=degree, vdegree=degree)
 shoe_last_shape = nurb.toShape()
 
-# --- Toe tip cap surface: ruled from xs_toe_end ring to g_B1 ---
-toe_rows = [
-    rows[-1],                                    # xs_toe_end — shared boundary with main surface
-    [App.Vector(xs_base.g_B1)] * v_count,        # B1 — all poles converge to toe tip
-]
-tc_uks     = [0.0, 1.0]
-tc_u_mults = [2, 2]
+if False:
+    # --- Toe tip cap surface: ruled from xs_toe_end ring to g_B1 ---
+    toe_rows = [
+        rows[-1],                                    # xs_toe_end — shared boundary with main surface
+        [App.Vector(xs_base.g_B1)] * v_count,        # B1 — all poles converge to toe tip
+    ]
+    tc_uks     = [0.0, 1.0]
+    tc_u_mults = [2, 2]
 
-toe_nurb = Part.BSplineSurface()
-toe_nurb.buildFromPolesMultsKnots(
-    toe_rows, tc_u_mults, v_mults, tc_uks, vks,
-    uperiodic=False, vperiodic=False,
-    udegree=1, vdegree=degree)
-toe_cap_shape = toe_nurb.toShape()
+    toe_nurb = Part.BSplineSurface()
+    toe_nurb.buildFromPolesMultsKnots(
+        toe_rows, tc_u_mults, v_mults, tc_uks, vks,
+        uperiodic=False, vperiodic=False,
+        udegree=1, vdegree=degree)
+    toe_cap_shape = toe_nurb.toShape()
 
-last_shell = Part.makeShell([shoe_last_shape, toe_cap_shape])
+last_shell = Part.makeShell([shoe_last_shape])#, toe_cap_shape]) chng_1
 last_solid = Part.makeSolid(last_shell)
-last_solid = last_solid.removeSplitter()
+last_solid = last_solid.removeSplitter()  
 _solid_name = "ShoeLast"
 if App.ActiveDocument.getObject(_solid_name):
     App.ActiveDocument.removeObject(_solid_name)
 _solid_obj = App.ActiveDocument.addObject("Part::Feature", _solid_name)
 _solid_obj.Shape = last_solid
-#Part.show(shoe_last_shape)
+#Part.show(shoe_last_shape)    #Showing same object twice ?
 #Part.show(heel_cap_shape)
 App.ActiveDocument.recompute()
 
-import os
-import MeshPart
-_dir = os.path.dirname(os.path.abspath(__file__))
-step_path = os.path.join(_dir, "shoe_last.step")
-last_solid.exportStep(step_path)
-print(f"Exported STEP: {step_path}")
-stl_path = os.path.join(_dir, "shoe_last.stl")
-mesh = MeshPart.meshFromShape(Shape=last_solid, LinearDeflection=0.3, AngularDeflection=0.5)
-mesh.write(stl_path)
-print(f"Exported STL:  {stl_path}")
+if False:
+    import os
+    import MeshPart
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    step_path = os.path.join(_dir, "shoe_last.step")
+    last_solid.exportStep(step_path)
+    print(f"Exported STEP: {step_path}")
+    stl_path = os.path.join(_dir, "shoe_last.stl")
+    mesh = MeshPart.meshFromShape(Shape=last_solid, LinearDeflection=0.3, AngularDeflection=0.5)
+    mesh.write(stl_path)
+    print(f"Exported STL:  {stl_path}")
 
 
 
-# --- Girth check: degree-2 BSpline through post-scale 3D ring points ---
-# rows index: 0=heel_end, 1=xs_0 ... 4=xs_3(instep) 5=xs_4(waist) 6=xs_5(joint)
-# Ring closes on itself — last point == first point; drop it before periodic build.
-# degree-2 periodic BSpline matches the NURBS surface v-direction degree,
-# so arc length closely approximates the actual surface girth at each section.
-_girth_ring_data = [
-    ("xs_3  instep", rows[4],  last_insole.ft_measurements.instep),
-    ("xs_4  waist",  rows[5],  last_insole.ft_measurements.waist),
-    ("xs_5  joint",  rows[6],  last_insole.ft_measurements.joint),
-]
-_girth_shapes = []
-print("\n=== Girth check (deg-2 BSpline, post-scale) ===")
-print(f"  {'Section':<14}  {'Target':>8}  {'BSpline':>8}  {'Delta':>8}")
-for label, ring, target_mm in _girth_ring_data:
-    # Drop closing H2, then prepend H2 again to double it — same reason CRISP_SOLE
-    # doubles H1: forces the degree-2 periodic BSpline to pass through H2 instead
-    # of cutting the corner inward at the lateral insole seam.
-    poles = [ring[0]] + list(ring[:-1])
-    bc = Part.BSplineCurve()
-    bc.buildFromPoles(poles, True, degree, False)   # periodic, same degree as surface
-    arc_mm  = bc.length()
-    arc_in  = arc_mm / 25.4
-    delta   = arc_mm - target_mm
-    sign    = "+" if delta >= 0 else ""
-    print(f"  {label:<14}  {target_mm:>7.1f}mm  {arc_mm:>7.1f}mm  {sign}{delta:.1f}mm  ({arc_in:.3f}in)")
-    _girth_shapes.append(bc.toShape())
-_girth_compound = Part.makeCompound(_girth_shapes)
-_girth_name     = "GirthCheckRings"
-_g_obj = App.ActiveDocument.getObject(_girth_name) or \
-         App.ActiveDocument.addObject("Part::Feature", _girth_name)
-_g_obj.Shape = _girth_compound
-_sg_str = "  ".join(f"{k}={v:.3f}" for k,v in _SECTION_GIRTH_SCALE.items()) or "none"
-print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  sec_girth_scale: {_sg_str}  rings='{_girth_name}'")
-print("=== positive delta = last larger than foot girth ===\n")
+if False:
+    # --- Girth check: degree-2 BSpline through post-scale 3D ring points ---
+    # rows index: 0=heel_end, 1=xs_0 ... 4=xs_3(instep) 5=xs_4(waist) 6=xs_5(joint)
+    # Ring closes on itself — last point == first point; drop it before periodic build.
+    # degree-2 periodic BSpline matches the NURBS surface v-direction degree,
+    # so arc length closely approximates the actual surface girth at each section.
+    _girth_ring_data = [
+        ("xs_3  instep", rows[4],  last_insole.ft_measurements.instep),
+        ("xs_4  waist",  rows[5],  last_insole.ft_measurements.waist),
+        ("xs_5  joint",  rows[6],  last_insole.ft_measurements.joint),
+    ]
+    _girth_shapes = []
+    print("\n=== Girth check (deg-2 BSpline, post-scale) ===")
+    print(f"  {'Section':<14}  {'Target':>8}  {'BSpline':>8}  {'Delta':>8}")
+    for label, ring, target_mm in _girth_ring_data:
+        # Drop closing H2, then prepend H2 again to double it — same reason CRISP_SOLE
+        # doubles H1: forces the degree-2 periodic BSpline to pass through H2 instead
+        # of cutting the corner inward at the lateral insole seam.
+        poles = [ring[0]] + list(ring[:-1])
+        bc = Part.BSplineCurve()
+        bc.buildFromPoles(poles, True, degree, False)   # periodic, same degree as surface
+        arc_mm  = bc.length()
+        arc_in  = arc_mm / 25.4
+        delta   = arc_mm - target_mm
+        sign    = "+" if delta >= 0 else ""
+        print(f"  {label:<14}  {target_mm:>7.1f}mm  {arc_mm:>7.1f}mm  {sign}{delta:.1f}mm  ({arc_in:.3f}in)")
+        _girth_shapes.append(bc.toShape())
+    _girth_compound = Part.makeCompound(_girth_shapes)
+    _girth_name     = "GirthCheckRings"
+    #_g_obj = App.ActiveDocument.getObject(_girth_name) or \
+    #         App.ActiveDocument.addObject("Part::Feature", _girth_name)
+    #_g_obj.Shape = _girth_compound
+    #_sg_str = "  ".join(f"{k}={v:.3f}" for k,v in _SECTION_GIRTH_SCALE.items()) or "none"
+    #print(f"  t_scale={xs_base.T_SCALE:.3f}  c_scale={xs_base.C_SCALE:.3f}  sec_girth_scale: {_sg_str}  rings='{_girth_name}'")
+    #print("=== positive delta = last larger than foot girth ===\n")
 
 print("\nThe end\n")
 

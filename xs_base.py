@@ -61,14 +61,11 @@ xs_0_normal = xs_1_normal = xs_2_normal = xs_3_normal = xs_4_normal = None
 xs_0_placement = xs_1_placement = xs_2_placement = xs_3_placement = None
 xs_4_placement = xs_5_placement = xs_6_placement = xs_7_placement = None
 xs_8_placement = xs_toe_end_placement = None
-bc_3d_heel = bc_3d_bottom = bc_3d_front_top = bc_3d_center_crown = None
-bc_3d_medial_highwater = bc_3d_lateral_highwater = None
-bc_3d_medial_crown = bc_3d_lateral_crown = None
+bc_3d_heel = bc_3d_bottom = bc_3d_front_top = None
 bc_3d_edge_list = []
 xs_0 = xs_1 = xs_2 = xs_3 = xs_4 = xs_5 = xs_6 = xs_7 = xs_8 = None
 xs_heel_end_row = None
-xs_toe_end = None
-xs_toe_end_scalars = None
+xs_toe_end_row  = None
 
 
 # --- Dataclasses ---
@@ -124,9 +121,14 @@ class xs_ctrl_pts_c:
 
 
 # --- Functions that use module globals (defined before build so they're accessible) ---
+counter = 0
 
 def compute_xs_scalars(placement: App.Placement,
-                       local_up:  App.Vector) -> xs_scalars_c:
+                       local_up:  App.Vector,
+                       xs_idx:    int = None) -> xs_scalars_c:
+    global counter
+    print(f"counters count{counter}")
+    counter+=1
     origin = placement.Base
     normal = App.Vector(placement.Matrix.A11,
                         placement.Matrix.A21,
@@ -145,40 +147,37 @@ def compute_xs_scalars(placement: App.Placement,
     H1  = App.Vector(H.x, HH1, H.z)
     H2  = App.Vector(H.x, HH2, H.z)
 
-    try:
-        g_T1 = App.Vector(hf.get_bspline_plane_intersection_new(
-                   bc_3d_medial_highwater, origin, normal)[0])
-    except IndexError:
-        _raw = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.medial_highwater_bc)
-        g_T1 = App.Vector(hf.get_bspline_plane_intersection_new(_raw, origin, normal)[0])
-    d_T1 = (g_T1 - g_H).dot(g_uHJ)
-    if d_T1 >= d_HJ:
-        d_T1 = d_HJ + (g_T1 - g_J).dot(gvec_uJB1)
-    try:
-        TT1 = hf.get_bspline_plane_intersection_new(
-                  #last_insole.insole_dwg.bc_medial_last_outline,
-                  control_curves.bc_medial_last_outline,
-                  App.Vector(C_x + d_T1, 0, 0), hf.nX)[0].y
-    except IndexError:
-        TT1 = HH1
-    HT1 = (g_T1 - origin).dot(local_up)
+    _h   = control_curves.xs_heights[xs_idx if xs_idx is not None else 8]
+    g_T1 = _h['g_T1']
+    g_T2 = _h['g_T2']
 
-    try:
-        g_T2 = App.Vector(hf.get_bspline_plane_intersection_new(
-                   bc_3d_lateral_highwater, origin, normal)[0])
-    except IndexError:
-        _raw = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.lateral_highwater_bc)
-        g_T2 = App.Vector(hf.get_bspline_plane_intersection_new(_raw, origin, normal)[0])
-    d_T2 = (g_T2 - g_H).dot(g_uHJ)
-    if d_T2 >= d_HJ:
-        d_T2 = d_HJ + (g_T2 - g_J).dot(gvec_uJB1)
-    try:
-        TT2 = hf.get_bspline_plane_intersection_new(
-                  control_curves.bc_lateral_last_outline,
-                  App.Vector(C_x + d_T2, 0, 0), hf.nX)[0].y
-    except IndexError:
+    if g_T1 is not None:
+        d_T1 = (g_T1 - g_H).dot(g_uHJ)
+        if d_T1 >= d_HJ:
+            d_T1 = d_HJ + (g_T1 - g_J).dot(gvec_uJB1)
+        try:
+            TT1 = hf.get_bspline_plane_intersection_new(
+                      control_curves.bc_medial_last_outline,
+                      App.Vector(C_x + d_T1, 0, 0), hf.nX)[0].y
+        except IndexError:
+            TT1 = HH1
+    else:
+        TT1 = HH1
+    HT1 = _h['HT1'] or 0.0
+
+    if g_T2 is not None:
+        d_T2 = (g_T2 - g_H).dot(g_uHJ)
+        if d_T2 >= d_HJ:
+            d_T2 = d_HJ + (g_T2 - g_J).dot(gvec_uJB1)
+        try:
+            TT2 = hf.get_bspline_plane_intersection_new(
+                      control_curves.bc_lateral_last_outline,
+                      App.Vector(C_x + d_T2, 0, 0), hf.nX)[0].y
+        except IndexError:
+            TT2 = HH2
+    else:
         TT2 = HH2
-    HT2 = (g_T2 - origin).dot(local_up)
+    HT2 = _h['HT2'] or 0.0
 
     _x_clamp = min(d, _xs8_x)
     try:
@@ -187,31 +186,18 @@ def compute_xs_scalars(placement: App.Placement,
                   App.Vector(_x_clamp, 0, 0), hf.nX)[0].y
     except IndexError:
         CC1 = 0.0
+        print("error5")
     try:
         CC2 = abs(hf.get_bspline_plane_intersection_new(
                   last_insole.insole_dwg.C2_insole_lateral,
                   App.Vector(_x_clamp, 0, 0), hf.nX)[0].y)
     except IndexError:
         CC2 = 0.0
+        print("error6")
 
-    try:
-        _g_C_cen = App.Vector(hf.get_bspline_plane_intersection_new(
-                    bc_3d_center_crown, origin, normal)[0])
-        HC = (_g_C_cen - origin).dot(local_up)
-    except IndexError:
-        HC = 0.0
-    try:
-        _g_C1 = App.Vector(hf.get_bspline_plane_intersection_new(
-                    bc_3d_medial_crown, origin, normal)[0])
-        HC1 = (_g_C1 - origin).dot(local_up)
-    except IndexError:
-        HC1 = 0.0
-    try:
-        _g_C2 = App.Vector(hf.get_bspline_plane_intersection_new(
-                    bc_3d_lateral_crown, origin, normal)[0])
-        HC2 = (_g_C2 - origin).dot(local_up)
-    except IndexError:
-        HC2 = 0.0
+    HC  = _h['HC']
+    HC1 = _h['HC1']
+    HC2 = _h['HC2']
 
     return xs_scalars_c(TT1=TT1, HT1=HT1, TT2=TT2, HT2=HT2,
                         H3=H3, H=H, HH1=HH1, HH2=HH2, H1=H1, H2=H2,
@@ -249,11 +235,9 @@ def build():
     global xs_0_placement, xs_1_placement, xs_2_placement, xs_3_placement
     global xs_4_placement, xs_5_placement, xs_6_placement, xs_7_placement
     global xs_8_placement, xs_toe_end_placement
-    global bc_3d_heel, bc_3d_bottom, bc_3d_front_top, bc_3d_center_crown
-    global bc_3d_medial_highwater, bc_3d_lateral_highwater
-    global bc_3d_medial_crown, bc_3d_lateral_crown, bc_3d_edge_list
+    global bc_3d_heel, bc_3d_bottom, bc_3d_front_top, bc_3d_edge_list
     global xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
-    global xs_heel_end_row, xs_toe_end, xs_toe_end_scalars
+    global xs_heel_end_row, xs_toe_end_row
     global NURBS_DEGREE, CRISP_SOLE, C_SCALE, T_SCALE
 
     importlib.reload(sp)
@@ -357,30 +341,16 @@ def build():
     bc_3d_front_top = bspline_to_3dyz_from_2dxy(last_profile.profile_dwg.front_top_bc)
     bc_3d_edge_list.append(bc_3d_front_top.toShape())
 
-    # control_curves builds these loci from profile curves + per-section overrides;
-    # xs_base intersects them to get HT1/HT2/HC/HC1/HC2 at each section.
-    bc_3d_center_crown      = control_curves.center_crown_locus
-    bc_3d_medial_highwater  = control_curves.medial_hw_locus
-    bc_3d_lateral_highwater = control_curves.lateral_hw_locus
-    bc_3d_medial_crown      = control_curves.medial_crown_locus
-    bc_3d_lateral_crown     = control_curves.lateral_crown_locus
-
-    bc_3d_edge_list.append(bc_3d_center_crown.toShape())
-    bc_3d_edge_list.append(bc_3d_medial_highwater.toShape())
-    bc_3d_edge_list.append(bc_3d_lateral_highwater.toShape())
-    bc_3d_edge_list.append(bc_3d_medial_crown.toShape())
-    bc_3d_edge_list.append(bc_3d_lateral_crown.toShape())
-
-    # --- Scalar samples for each section ---
-    xs_0 = compute_xs_scalars(xs_0_placement, gvec_uHC5)
-    xs_1 = compute_xs_scalars(xs_1_placement, gvec_uHC5)
-    xs_2 = compute_xs_scalars(xs_2_placement, gvec_uKbE)
-    xs_3 = compute_xs_scalars(xs_3_placement, gvec_K_I)
-    xs_4 = compute_xs_scalars(xs_4_placement, gvec_K_I)
-    xs_5 = compute_xs_scalars(xs_5_placement, gvec_J1_J)
-    xs_6 = compute_xs_scalars(xs_6_placement, gvec_uJB1_localY)
-    xs_7 = compute_xs_scalars(xs_7_placement, gvec_uJB1_localY)
-    xs_8 = compute_xs_scalars(xs_8_placement, gvec_uJB1_localY)
+    # --- Scalar samples for each section (xs_heights[i] from control_curves) ---
+    xs_0 = compute_xs_scalars(xs_0_placement, gvec_uHC5,         xs_idx=0)
+    xs_1 = compute_xs_scalars(xs_1_placement, gvec_uHC5,         xs_idx=1)
+    xs_2 = compute_xs_scalars(xs_2_placement, gvec_uKbE,         xs_idx=2)
+    xs_3 = compute_xs_scalars(xs_3_placement, gvec_K_I,          xs_idx=3)
+    xs_4 = compute_xs_scalars(xs_4_placement, gvec_K_I,          xs_idx=4)
+    xs_5 = compute_xs_scalars(xs_5_placement, gvec_J1_J,         xs_idx=5)
+    xs_6 = compute_xs_scalars(xs_6_placement, gvec_uJB1_localY,  xs_idx=6)
+    xs_7 = compute_xs_scalars(xs_7_placement, gvec_uJB1_localY,  xs_idx=7)
+    xs_8 = compute_xs_scalars(xs_8_placement, gvec_uJB1_localY,  xs_idx=8)
 
     # --- Heel end cap row ---
     _cap_spread = 0.1   # mm — prevents NURBS singularity at seam end
@@ -414,36 +384,43 @@ def build():
     last_profile.build_xs_plane_pi("xs_toe_end", xs_toe_end_placement, Show_Plane[9])
     print(f"xs_toe_end at d={_d_lo:.2f} mm from J  (insole half-width ≈ {_insole_medial_y_at_spine_d(_d_lo):.2f} mm)")
 
-    _sc = xs_toe_end_scalars = compute_xs_scalars(xs_toe_end_placement, gvec_uJB1_localY)
-    try:
-        _g_C  = hf.get_bspline_plane_intersection_new(
-                    bc_3d_center_crown, xs_toe_end_tvec, gvec_uJB1)[0]
-        _HC   = (_g_C - xs_toe_end_tvec).dot(gvec_uJB1_localY)
-    except IndexError:
-        _HC   = xs_8.HC  # xs_toe_end is past locus extent; xs_8 height is close
-    _H3_y = (_sc.H3 - xs_toe_end_tvec).dot(gvec_uJB1_localY)
-    _H_y  = _H3_y + 3.0
-    _t    = _sc.TT1 / (_sc.TT1 - _sc.TT2)
-    _T_y  = _sc.HT1 + _t * (_sc.HT2 - _sc.HT1)
+    # --- Toe end cap row: geometry-driven from front_top_bc intersections ---
+    def _prof_to_3d(p):
+        """Profile sketch local point → 3D world."""
+        return last_profile.sketch_profile.Placement.multVec(App.Vector(p.X, p.Y, p.Z))
 
-    _xs8_iw  = _insole_medial_y_at_spine_d(jb1_len)
-    _toe_iw  = _insole_medial_y_at_spine_d(_d_lo)
-    _taper_f = (_toe_iw / _xs8_iw) if _xs8_iw > 0 else 1.0
-    print(f"xs_toe_end taper: xs8_iw={_xs8_iw:.2f}  toe_iw={_toe_iw:.2f}  f={_taper_f:.3f}")
+    _toe_cap_spread = 0.1
+    _toe_cap_lat    = App.Vector(0, _toe_cap_spread, 0)
 
-    xs_toe_end = xs_ctrl_pts_c(
-        H3=App.Vector(0,          _H_y,     0),
-        H =App.Vector(0,          _H_y,     0),
-        H1=App.Vector( _sc.HH1,  _H_y,     0),
-        H2=App.Vector( _sc.HH2,  _H_y,     0),
-        T =App.Vector(0,          _T_y,     0),
-        T1=App.Vector( _sc.TT1,  _sc.HT1,  0),
-        T2=App.Vector( _sc.TT2,  _sc.HT2,  0),
-        C =App.Vector(0,                      _HC,                0),
-        C1=App.Vector( xs_8.CC1 * _taper_f,  min(_sc.HC1, _HC),  0),
-        C2=App.Vector(-xs_8.CC2 * _taper_f,  min(_sc.HC2, _HC),  0))
+    _hw_isects  = control_curves.front_top_bc.intersect(control_curves.medial_highwater_bc)
+    _c1_isects  = control_curves.front_top_bc.intersect(control_curves.C1_profile_bc)
+    _c_isects   = control_curves.front_top_bc.intersect(control_curves.bc_C_locus)
+    _c2_isects  = control_curves.front_top_bc.intersect(control_curves.C2_profile_bc)
 
-    _show_bsplineshapes()
+    _hw3    = _prof_to_3d(_hw_isects[0])
+    _c1_3   = _prof_to_3d(_c1_isects[1])
+    _c_3    = _prof_to_3d(_c_isects[0])
+    _c2_3   = _prof_to_3d(_c2_isects[1])
+
+    print(f"toe_end_row  hw={_hw3}  C={_c_3}  C1={_c1_3}  C2={_c2_3}  B1={g_B1}")
+
+    _ter = [
+        g_B1  - _toe_cap_lat,   # H2: toe lateral (seam)
+        App.Vector(g_B1),       # H3: toe center
+        g_B1  + _toe_cap_lat,   # H1: toe medial
+        _hw3  + _toe_cap_lat,   # T1: highwater medial
+        _c1_3 + _toe_cap_lat,   # C1: crown medial
+        App.Vector(_c_3),       # C:  crown center
+        _c2_3 - _toe_cap_lat,   # C2: crown lateral
+        _hw3  - _toe_cap_lat,   # T2: highwater lateral
+        g_B1  - _toe_cap_lat,   # H2: close seam
+    ]
+    if CRISP_SOLE:
+        xs_toe_end_row = [_ter[0], _ter[1], _ter[2], _ter[2]] + _ter[3:]
+    else:
+        xs_toe_end_row = _ter
+
+    #_show_bsplineshapes()
     view = FreeCADGui.ActiveDocument.ActiveView
     if view and hasattr(view, 'viewFront'):
         view.viewFront()

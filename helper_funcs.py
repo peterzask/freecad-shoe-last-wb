@@ -163,7 +163,7 @@ def print_4x4_matrix(m=App.Rotation,optional_str=None):
 
 def p_vec(v:App.Vector,name:str=None):
     #print(f"{name}\n{v.x:12.4f}\n{v.y:12.4f}\n{v.z:12.4f}\n")
-    print(f"{name:10} = [{v.x:10.4f},{v.y:10.4f},{v.z:10.4f}]")
+    print(f"{name:10}  ({v.x:10.4f},{v.y:10.4f},{v.z:10.4f})")
     return
 
 def print_placement(placement: App.Rotation, name:str=None):

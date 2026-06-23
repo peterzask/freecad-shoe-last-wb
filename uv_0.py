@@ -162,19 +162,20 @@ if False:
         udegree=1, vdegree=degree)
     toe_cap_shape = toe_nurb.toShape()
 
-last_shell = Part.makeShell([shoe_last_shape])#, toe_cap_shape]) chng_1
+last_shell = Part.makeShell([shoe_last_shape])
 last_solid = Part.makeSolid(last_shell)
-last_solid = last_solid.removeSplitter()  
+last_solid = last_solid.removeSplitter()
 _solid_name = "ShoeLast"
 if App.ActiveDocument.getObject(_solid_name):
     App.ActiveDocument.removeObject(_solid_name)
 _solid_obj = App.ActiveDocument.addObject("Part::Feature", _solid_name)
 _solid_obj.Shape = last_solid
-#Part.show(shoe_last_shape)    #Showing same object twice ?
+Part.show(shoe_last_shape)    #Showing same object twice ?
 #Part.show(heel_cap_shape)
 App.ActiveDocument.recompute()
 
-if False:
+
+if True:
     import os
     import MeshPart
     _dir = os.path.dirname(os.path.abspath(__file__))

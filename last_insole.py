@@ -153,39 +153,6 @@ class insole_layout:
         V1 = np.array([P1.x,P1.y,P1.z])
         self.K = App.Vector(*(V0 + V1*t_result))
 
-    """
-#    def draw_last_outline(self, sketch):
-#        lateral_K = (self.J2 + self.H2 + App.Vector(0,10,0)) * 0.5
-#        lateral_K.y = lateral_K.y*0.95
-#        medial_K = self.K*1.0
-#        medial_K.y *= 1.8
-#        C0 = self.C + App.Vector(-5,0,0)
-#        H1_temp = self.H1*1.0 + App.Vector(0,2,0)
-#        H2_temp = self.H2*1.0 + App.Vector(0,-2,0)
-#        B1_temp = self.B1*1.0 + App.Vector(1,1,0)
-#        B2_temp = self.B2*1.0 + App.Vector(1,-1,0)
-#        D_temp =  self.D *1.0 + App.Vector(2,0,0)
-#        C2 = self.C + App.Vector(0,5+17,0)
-#        C3 = self.C + App.Vector(0,-5-17,0)
-#        pinky_pt = self.B2*1.0 + (self.J2-self.B2)/2 + App.Vector(0,-8,0)
-#        sketch.addGeometry(Part.Circle(pinky_pt,hf.nZ,2))
-#        poles = [C0, C2, H1_temp, medial_K, self.J1, B1_temp,
-#                 D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
-#        bc = Part.BSplineCurve()
-#        bc.buildFromPoles(poles, False, 2, False)
-#
-#        bc_medial_last_outline_poles= [C0, C2, H1_temp, medial_K, self.J1, B1_temp, D_temp]
-#        self.bc_medial_last_outline = Part.BSplineCurve()
-#        self.bc_medial_last_outline.buildFromPoles(bc_medial_last_outline_poles, False, 2, False)
-#        sketch.addGeometry(self.bc_medial_last_outline)
-#
-#        bc_lateral_last_outline_poles = [D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
-#        self.bc_lateral_last_outline = Part.BSplineCurve()
-#        self.bc_lateral_last_outline.buildFromPoles(bc_lateral_last_outline_poles, False, 2, False)
-#        sketch.addGeometry(self.bc_lateral_last_outline)
-#
-#        return bc
-        """
 
     def print_(self):
         print(f"last_insole.insole_dwg.")
@@ -289,3 +256,42 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+#dead code
+    """
+#    def draw_last_outline(self, sketch):
+#        lateral_K = (self.J2 + self.H2 + App.Vector(0,10,0)) * 0.5
+#        lateral_K.y = lateral_K.y*0.95
+#        medial_K = self.K*1.0
+#        medial_K.y *= 1.8
+#        C0 = self.C + App.Vector(-5,0,0)
+#        H1_temp = self.H1*1.0 + App.Vector(0,2,0)
+#        H2_temp = self.H2*1.0 + App.Vector(0,-2,0)
+#        B1_temp = self.B1*1.0 + App.Vector(1,1,0)
+#        B2_temp = self.B2*1.0 + App.Vector(1,-1,0)
+#        D_temp =  self.D *1.0 + App.Vector(2,0,0)
+#        C2 = self.C + App.Vector(0,5+17,0)
+#        C3 = self.C + App.Vector(0,-5-17,0)
+#        pinky_pt = self.B2*1.0 + (self.J2-self.B2)/2 + App.Vector(0,-8,0)
+#        sketch.addGeometry(Part.Circle(pinky_pt,hf.nZ,2))
+#        poles = [C0, C2, H1_temp, medial_K, self.J1, B1_temp,
+#                 D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
+#        bc = Part.BSplineCurve()
+#        bc.buildFromPoles(poles, False, 2, False)
+#
+#        bc_medial_last_outline_poles= [C0, C2, H1_temp, medial_K, self.J1, B1_temp, D_temp]
+#        self.bc_medial_last_outline = Part.BSplineCurve()
+#        self.bc_medial_last_outline.buildFromPoles(bc_medial_last_outline_poles, False, 2, False)
+#        sketch.addGeometry(self.bc_medial_last_outline)
+#
+#        bc_lateral_last_outline_poles = [D_temp, B2_temp, pinky_pt, self.J2, lateral_K, H2_temp, C3, C0]
+#        self.bc_lateral_last_outline = Part.BSplineCurve()
+#        self.bc_lateral_last_outline.buildFromPoles(bc_lateral_last_outline_poles, False, 2, False)
+#        sketch.addGeometry(self.bc_lateral_last_outline)
+#
+#        return bc
+        """

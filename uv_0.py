@@ -146,20 +146,28 @@ nurb.buildFromPolesMultsKnots(
     udegree=degree, vdegree=degree)
 shoe_last_shape = nurb.toShape()
 
-# Extract heel and toe boundary edges from the main surface.
-# Cross-section edges have small x-span; longitudinal seam edges span the full shoe length.
-def _x_span(e):
-    bb = e.BoundBox
-    return bb.XMax - bb.XMin
+# Build heel and toe cap surfaces as ruled surfaces (ring → centroid).
+# Same vks/v_mults as the main surface → exact BSpline match at the shared boundary edge.
+def _ring_cap(ring, ring_at_u0=True):
+    n = len(ring) - 1  # unique poles (exclude closing repeat)
+    ctr = App.Vector(
+        sum(p.x for p in ring[:n]) / n,
+        sum(p.y for p in ring[:n]) / n,
+        sum(p.z for p in ring[:n]) / n,
+    )
+    ctr_row = [ctr] * len(ring)
+    poles = [ring, ctr_row] if ring_at_u0 else [ctr_row, ring]
+    nc = Part.BSplineSurface()
+    nc.buildFromPolesMultsKnots(
+        poles, [2, 2], v_mults, [0.0, 1.0], vks,
+        uperiodic=False, vperiodic=False,
+        udegree=1, vdegree=degree)
+    return nc.toShape()
 
-_all_edges   = shoe_last_shape.Edges
-_xs_edges    = sorted(_all_edges, key=_x_span)[:2]  # two smallest x-span = heel and toe
-_heel_edge   = min(_xs_edges, key=lambda e: e.BoundBox.Center.x)
-_toe_edge    = max(_xs_edges, key=lambda e: e.BoundBox.Center.x)
-print(f"heel edge closed={_heel_edge.isClosed()}  toe edge closed={_toe_edge.isClosed()}")
-
-heel_cap_shape = Part.makeFilledFace([_heel_edge])
-toe_cap_shape  = Part.makeFilledFace([_toe_edge])
+_heel_ring = list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))
+_toe_ring  = list(xs_base.xs_toe_end_row)
+heel_cap_shape = _ring_cap(_heel_ring, ring_at_u0=True)
+toe_cap_shape  = _ring_cap(_toe_ring,  ring_at_u0=False)
 
 last_shell = Part.makeShell([shoe_last_shape, heel_cap_shape, toe_cap_shape])
 last_solid = Part.makeSolid(last_shell)

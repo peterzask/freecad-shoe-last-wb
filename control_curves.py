@@ -318,20 +318,31 @@ def build():
 
 
 
+    class _lat:
+        _dw   = last_insole.insole_dwg
+        A0    = _dw.A
+        lC3   = _dw.A  + App.Vector(0, -5 - 17, 0)
+        H2_t  = _dw.H2 + App.Vector(0, -2, 0)
+        #B2_t  = _dw.B2 + App.Vector(1, -1, 0) old
+        B2_t  = _dw.B2 + App.Vector(9, -7, 0)
+        D_t   = _dw.D  + App.Vector(2,  0, 0)
+        lat_K = (_dw.J2 + _dw.H2 + App.Vector(0, 10, 0)) * 0.5
+        pinky = _dw.B2 + (_dw.J2 - _dw.B2) * 0.5 + App.Vector(0, -8, 0)
+
     bc_lateral_last_outline = Part.BSplineCurve()
     bc_lateral_last_outline.buildFromPoles(
-        [D_t, B2_t, pinky, idw.J2, lat_K, H2_t, lC3, A0], False, 2, False)
-    sketch_io.addGeometry(bc_lateral_last_outline) # changed, added this line
+        [_lat.D_t, _lat.B2_t, _lat.pinky, idw.J2, _lat.lat_K, _lat.H2_t, _lat.lC3, _lat.A0], False, 2, False)
+    sketch_io.addGeometry(bc_lateral_last_outline)
 
     #sandbox 2A start
     #Row 2 Input curve 
     if Draw_Sketch_Overlay_Lateral_Last_Outline:=True:
         #sketch_name = "sketch_insole_overlay"
         #doc,sketch_io = hf.Doc_Sketch(last_insole.doc,sketch_name)
-        _pt_list =  [D_t, B2_t, pinky, idw.J2, lat_K, H2_t, lC3, A0]
+        _pt_list = [_lat.D_t, _lat.B2_t, _lat.pinky, idw.J2, _lat.lat_K, _lat.H2_t, _lat.lC3, _lat.A0]
         for p in _pt_list:
             sketch_io.addGeometry(Part.Circle(p,hf.nZ,2.0))
-        _name_list = ["D_t", "B2_t", "pinky", "idw.J2", "lat_K", "H2_t", "lC3", "A0"]
+        _name_list = ["_lat.D_t", "_lat.B2_t", "_lat.pinky", "idw.J2", "_lat.lat_K", "_lat.H2_t", "_lat.lC3", "_lat.A0"]
         k=0
         print("**********Lateral Last Outline Control Points*************************************")
         for p in _pt_list:
@@ -576,7 +587,7 @@ def build():
     ], False, 2, False)
     #sandbox 7A start
     #Row 7 Input curve. C2 insole lateral crown poles (XY).
-    if Draw_Sketch_C2_insole_lateral:=True:
+    if Draw_Sketch_C2_insole_lateral:=False:
         #sketch_name = "sketch_insole_overlay"
         #if(not sketch_io):
         #    doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_name)

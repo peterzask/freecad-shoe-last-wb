@@ -73,20 +73,30 @@ intersect_x = last_insole.insole_dwg.C.x + (xs_base.g_B2 - xs_base.g_H).dot(xs_b
 print(f"  intersect_x={intersect_x:.2f}  (xs_8 plane X in insole coords)")
 
 # -----------------------------------------------------------------------
-# Visualize: spheres at surface-sampled T2 points along all rows
+# uIso rings: actual surface cross-section curves at each row's u param.
+# These are the true surface profiles — not approximations from nurb.value().
+# nurb.uIso(u) returns a BSplineCurve; ring.value(v) gives exact surface points.
 # -----------------------------------------------------------------------
-_show_surfspheres = True
-if _show_surfspheres:
-    shapes = []
-    for i in range(u_count):
-        sp = uv_0.nurb.value(uks_raw[i], vks_raw[T2_j])
-        shapes.append(Part.makeSphere(2.0, V(sp.x, sp.y, sp.z)))
-    obj_name = "SurfT2_samples"
-    doc = App.ActiveDocument
-    obj = doc.getObject(obj_name) or doc.addObject("Part::Feature", obj_name)
-    obj.Shape = Part.makeCompound(shapes)
-    doc.recompute()
-    print(f"\nShowing {len(shapes)} surface T2 sample spheres as '{obj_name}'")
+print(f"\n=== uIso T2-H2 relative position on actual surface ===")
+print(f"{'row':<10}  {'uiso_T2.y':>10}  {'uiso_H2.y':>10}  {'T2-H2':>8}  (- = T2 outside H2)")
+
+doc       = App.ActiveDocument
+iso_shapes = []
+for i, row in enumerate(uv_0.rows):
+    rn   = row_names[i] if i < len(row_names) else f"row_{i}"
+    ring = uv_0.nurb.uIso(uks_raw[i])          # BSplineCurve at this u slice
+    iso_shapes.append(ring.toShape())
+    pt_T2 = ring.value(vks_raw[T2_j])
+    pt_H2 = ring.value(vks_raw[H2_j])
+    diff  = pt_T2.y - pt_H2.y                  # negative = T2 more lateral (correct)
+    flag  = "✓" if diff < 0 else "✗ INSIDE"
+    print(f"{rn:<10}  {pt_T2.y:>10.3f}  {pt_H2.y:>10.3f}  {diff:>+8.3f}  {flag}")
+
+obj_name = "uIso_rings"
+obj = doc.getObject(obj_name) or doc.addObject("Part::Feature", obj_name)
+obj.Shape = Part.makeCompound(iso_shapes)
+doc.recompute()
+print(f"\nShowing {len(iso_shapes)} uIso ring curves as '{obj_name}'")
 
 
 

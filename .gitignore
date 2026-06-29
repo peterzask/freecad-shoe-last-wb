@@ -1,3 +1,8 @@
+# Images (don't commit without author permission)
+*.jpg
+*.jpeg
+*.png
+
 # Generated outputs
 shoe_last.stl
 shoe_last.step

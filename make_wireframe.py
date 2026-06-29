@@ -39,9 +39,6 @@ for xs, placement in xs_list:
     #rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)])
     rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole)])
 
-pl = xs_base.xs_toe_end_placement * hf.yz_xy_place
-#rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_sole=xs_base.CRISP_SOLE)])
-rows.append([pl.multVec(pv) for pv in xs_base.xs_toe_end.control_points(crisp_sole)])
 
 u_count = len(rows)
 v_count = len(rows[0])

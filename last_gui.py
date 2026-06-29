@@ -5,10 +5,11 @@ import Part
 import sys
 import importlib
 
-for _mod in ('helper_funcs', 'last_insole', 'last_profile', 'xs_base', 'xs_0',
-             'xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8',
-             'uv_0', 'make_wireframe'):
-    sys.modules.pop(_mod, None)
+if False:
+    for _mod in ('helper_funcs', 'last_insole', 'last_profile', 'xs_base', 'xs_0',
+                 'xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8',
+                 'uv_0', 'make_wireframe'):
+        sys.modules.pop(_mod, None)
 import last_insole
 import last_profile
 import xs_base
@@ -21,6 +22,7 @@ import xs_5
 import xs_6
 import xs_7
 import xs_8
+import control_curves
 import uv_0
 import make_wireframe
 
@@ -72,10 +74,13 @@ class MacroLauncher(QtGui.QWidget):
         btn12.clicked.connect(self.run_uv_0)
         btn13 = QtGui.QPushButton('xs_base', self)
         btn13.clicked.connect(self.run_xs_base)
+        btn_cc = QtGui.QPushButton('control_curves', self)
+        btn_cc.clicked.connect(self.run_control_curves)
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(btn)                   # insole
         layout.addWidget(btn2)                  # profile
+        layout.addWidget(btn_cc)                # control_curves
         layout.addWidget(btn3)
         layout.addWidget(btn4)
         layout.addWidget(btn5)
@@ -102,6 +107,11 @@ class MacroLauncher(QtGui.QWidget):
         last_profile.main()
         refresh_view()
         print("Profile rebuilt...")
+
+    def run_control_curves(self):
+        importlib.reload(control_curves)
+        refresh_view()
+        print("control_curves rebuilt.")
 
     def run_xs_base(self):
         importlib.reload(xs_base)

@@ -325,7 +325,7 @@ def build():
 
     #sandbox 2A start
     #Row 2 Input curve 
-    if Draw_Sketch_Overlay_Lateral_Last_Outline:=False:
+    if Draw_Sketch_Overlay_Lateral_Last_Outline:=True:
         #sketch_name = "sketch_insole_overlay"
         #doc,sketch_io = hf.Doc_Sketch(last_insole.doc,sketch_name)
         _pt_list =  [D_t, B2_t, pinky, idw.J2, lat_K, H2_t, lC3, A0]
@@ -436,7 +436,7 @@ def build():
         [idw.D, idw.B2, idw.J2, extra_K, idw.H2, iC3, idw.C], False, 2, False)
     #sandbox 4A start
     #Row 4 Input curve. Insole lateral outline poles (XY).
-    if Draw_Sketch_insole_bc_lateral:=False:
+    if Draw_Sketch_insole_bc_lateral:=True:
         #sketch_name = "sketch_insole_overlay"
         #doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_name)
         _pt_list = [idw.D, idw.B2, idw.J2, extra_K, idw.H2, iC3, idw.C]
@@ -781,7 +781,9 @@ def build():
 
 sketch_po.Placement = last_profile.sketch_profile.Placement
 
-def main(): 
+build()   # run on every import/reload so curves always appear
+
+def main():
     build()
     print("control_curves main")
 if __name__ == "__main__":

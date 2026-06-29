@@ -91,7 +91,6 @@ class MacroLauncher(QtGui.QWidget):
     def run_control_curves(self):
         import control_curves
         importlib.reload(control_curves)
-        control_curves.build()
         refresh_view()
         print("control_curves rebuilt.")
 

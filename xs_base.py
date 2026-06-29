@@ -163,6 +163,7 @@ def compute_xs_scalars(placement: App.Placement,
             TT1 = HH1
     else:
         TT1 = HH1
+
     HT1 = _h['HT1'] or 0.0
 
     if g_T2 is not None:

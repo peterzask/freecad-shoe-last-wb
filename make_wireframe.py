@@ -31,7 +31,7 @@ xs_list = [
     (xs_7.xs_7, xs_base.xs_7_placement),
     (xs_8.xs_8, xs_base.xs_8_placement),
 ]
-crisp_sole = False
+crisp_sole = xs_base.CRISP_SOLE
 #rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]  # heel end cap (global 3D)
 rows = [list(xs_base.get_heel_end_row(crisp_sole))]  # heel end cap (global 3D)
 for xs, placement in xs_list:

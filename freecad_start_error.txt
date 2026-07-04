@@ -92,3 +92,23 @@ FreeCAD is free and open-source software licensed under the terms of LGPL2+ lice
 Qt: Session management error: Could not open network socket
 Migrating Start Workbench to Start command... done.
 
+
+
+New paste: 
+Note that the directories 
+
+'/var/lib/flatpak/exports/share'
+'/home/rgrabbe/.local/share/flatpak/exports/share'
+
+are not in the search path set by the XDG_DATA_DIRS environment variable, so
+applications installed by Flatpak may not appear on your desktop until the
+session is restarted.
+
+FreeCAD 1.1.1, Libs: 1.1.1R44874 (Git)
+(C) 2001-2011 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+
+Qt: Session management error: Could not open network socket
+
+
+

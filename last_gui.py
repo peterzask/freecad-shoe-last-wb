@@ -1,3 +1,8 @@
+import sys, os
+_here = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.path.expanduser("~/00_ausr/work/freecad/macros")
+if _here not in sys.path:
+    sys.path.insert(0, _here)
+
 from PySide import QtGui
 import FreeCAD as App
 import FreeCADGui

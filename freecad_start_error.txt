@@ -1,0 +1,94 @@
+rgrabbe@Sim:~/00_ausr/work/freecad/macros$ ! sudo snap refresh freecad
+snap "freecad" has no updates available
+rgrabbe@Sim:~/00_ausr/work/freecad/macros$ ! sudo apt install flatpak
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  libostree-1-1
+Suggested packages:
+  malcontent-gui
+The following NEW packages will be installed:
+  flatpak libostree-1-1
+0 upgraded, 2 newly installed, 0 to remove and 1 not upgraded.
+Need to get 1,723 kB of archives.
+After this operation, 6,469 kB of additional disk space will be used.
+Do you want to continue? [Y/n] 
+Get:1 http://us.archive.ubuntu.com/ubuntu noble/universe amd64 libostree-1-1 amd64 2024.5-1build2 [373 kB]
+Get:2 http://us.archive.ubuntu.com/ubuntu noble-updates/universe amd64 flatpak amd64 1.14.6-1ubuntu0.1 [1,350 kB]
+Fetched 1,723 kB in 6s (291 kB/s)  
+Selecting previously unselected package libostree-1-1:amd64.
+(Reading database ... 405465 files and directories currently installed.)
+Preparing to unpack .../libostree-1-1_2024.5-1build2_amd64.deb ...
+Unpacking libostree-1-1:amd64 (2024.5-1build2) ...
+Selecting previously unselected package flatpak.
+Preparing to unpack .../flatpak_1.14.6-1ubuntu0.1_amd64.deb ...
+Unpacking flatpak (1.14.6-1ubuntu0.1) ...
+Setting up libostree-1-1:amd64 (2024.5-1build2) ...
+Setting up flatpak (1.14.6-1ubuntu0.1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for dbus (1.14.10-4ubuntu4.1) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+rgrabbe@Sim:~/00_ausr/work/freecad/macros$ ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+Note that the directories 
+
+'/var/lib/flatpak/exports/share'
+'/home/rgrabbe/.local/share/flatpak/exports/share'
+
+are not in the search path set by the XDG_DATA_DIRS environment variable, so
+applications installed by Flatpak may not appear on your desktop until the
+session is restarted.
+
+rgrabbe@Sim:~/00_ausr/work/freecad/macros$ ! flatpak install flathub org.freecad.FreeCAD
+
+Note that the directories 
+
+'/var/lib/flatpak/exports/share'
+'/home/rgrabbe/.local/share/flatpak/exports/share'
+
+are not in the search path set by the XDG_DATA_DIRS environment variable, so
+applications installed by Flatpak may not appear on your desktop until the
+session is restarted.
+
+Looking for matches…
+Required runtime for org.freecad.FreeCAD/x86_64/stable (runtime/org.kde.Platform/x86_64/6.10) found in remote flathub
+Do you want to install it? [Y/n]: 
+
+org.freecad.FreeCAD permissions:
+    ipc     network     x11     dri     file access [1]     dbus access [2]
+
+    [1] /run/spnav.sock:ro, host, xdg-config/kdeglobals:ro, xdg-run/gvfs
+    [2] com.canonical.AppMenu.Registrar, org.freedesktop.Flatpak, org.kde.KGlobalSettings, org.kde.kconfig.notify
+
+
+        ID                                                Branch                 Op            Remote             Download
+ 1. [✓] org.freecad.FreeCAD.Locale                        stable                 i             flathub              3.0 kB / 3.7 MB
+ 2. [✓] org.freedesktop.Platform.GL.default               25.08                  i             flathub            141.6 MB / 142.6 MB
+ 3. [✓] org.freedesktop.Platform.GL.default               25.08-extra            i             flathub             25.9 MB / 142.6 MB
+ 4. [✓] org.freedesktop.Platform.VAAPI.Intel              25.08                  i             flathub             13.9 MB / 14.0 MB
+ 5. [✓] org.freedesktop.Platform.codecs-extra             25.08-extra            i             flathub             14.2 MB / 14.4 MB
+ 6. [✓] org.gtk.Gtk3theme.Yaru                            3.22                   i             flathub            139.3 kB / 191.5 kB
+ 7. [✓] org.kde.Platform.Locale                           6.10                   i             flathub             18.7 kB / 401.3 MB
+ 8. [✓] org.kde.Platform                                  6.10                   i             flathub            316.3 MB / 387.3 MB
+ 9. [✓] org.freecad.FreeCAD                               stable                 i             flathub            418.6 MB / 463.6 MB
+
+Installation complete.
+rgrabbe@Sim:~/00_ausr/work/freecad/macros$ flatpak run org.freecad.FreeCAD
+
+Note that the directories 
+
+'/var/lib/flatpak/exports/share'
+'/home/rgrabbe/.local/share/flatpak/exports/share'
+
+are not in the search path set by the XDG_DATA_DIRS environment variable, so
+applications installed by Flatpak may not appear on your desktop until the
+session is restarted.
+
+FreeCAD 1.1.1, Libs: 1.1.1R44874 (Git)
+(C) 2001-2011 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+
+Qt: Session management error: Could not open network socket
+Migrating Start Workbench to Start command... done.
+

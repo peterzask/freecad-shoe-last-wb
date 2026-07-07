@@ -53,6 +53,8 @@ class MacroLauncher(QtGui.QWidget):
         btn10.clicked.connect(self.run_xs_7)
         btn11 = QtGui.QPushButton('xs_8 crown', self)
         btn11.clicked.connect(self.run_xs_8)
+        btn11b = QtGui.QPushButton('xs_9 toe', self)
+        btn11b.clicked.connect(self.run_xs_9)
         btn_wf = QtGui.QPushButton('Wireframe preview (fast)', self)
         btn_wf.clicked.connect(self.run_wireframe)
         btn12 = QtGui.QPushButton('uv_0 nurb surface', self)
@@ -73,6 +75,7 @@ class MacroLauncher(QtGui.QWidget):
         layout.addWidget(btn9)
         layout.addWidget(btn10)
         layout.addWidget(btn11)
+        layout.addWidget(btn11b)
         layout.addWidget(btn_wf)
         layout.addWidget(btn12)
         layout.addWidget(btn13)
@@ -158,6 +161,12 @@ class MacroLauncher(QtGui.QWidget):
         importlib.reload(xs_8)
         refresh_view()
         print("xs_8 rebuilt.")
+
+    def run_xs_9(self):
+        import xs_9
+        importlib.reload(xs_9)
+        refresh_view()
+        print("xs_9 rebuilt.")
 
     def run_wireframe(self):
         import make_wireframe

@@ -10,7 +10,7 @@ import inspect
 from dataclasses import dataclass
 import importlib
 import helper_funcs as hf
-import shape_params as sp
+#import shape_params as sp
 importlib.reload(hf)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
@@ -27,6 +27,7 @@ class foot_c:
     heel_height: float = 0.0
     ankle:       float = 0.0
     toe_space:   float = 15.0
+    toe_spring: float = 20.0
     def __init__(self, foot_len, joint, waist, instep,
                  h_instep, heel, heel_height, ankle, toe_space=15.0):
         self.foot_len = foot_len
@@ -41,14 +42,14 @@ class foot_c:
 
     def print_(self):
         print("foot_c\n",
-              "foot_len       (%10.4f)\n"%self.foot_len,
-              "joint    (%10.4f)\n"%self.joint,
-              "waist    (%10.4f)\n"%self.waist,
-              "instep   (%10.4f)\n"%self.instep,
-              "h_instep (%10.4f)\n"%self.h_instep,
-              "heel     (%10.4f)\n"%self.heel,
-              "heel_height (%10.4f)\n"%self.heel_height,
-              "ankle    (%10.4f)\n"%self.ankle)
+              "foot_len    (%10.4f) (%10.4f)\n"%(self.foot_len,self.foot_len/25.4),
+              "joint       (%10.4f) (%10.4f)\n" %(self.joint,self.joint/25.4),
+              "waist       (%10.4f) (%10.4f)\n"%(self.waist,self.waist/25.4),
+              "instep      (%10.4f) (%10.4f)\n"%(self.instep,self.instep/25.4),
+              "h_instep    (%10.4f) (%10.4f)\n"%(self.h_instep,self.h_instep/25.4),
+              "heel        (%10.4f) (%10.4f)\n"%(self.heel,self.heel/25.4),
+              "heel_height (%10.4f) (%10.4f)\n"%(self.heel_height,self.heel_height/25.4),
+              "ankle       (%10.4f) (%10.4f)\n"%(self.ankle,self.ankle/25.4))
 
 
 @dataclass
@@ -56,27 +57,27 @@ class insole_len_c:
     BD:   float=15.0 # Toe Allowance — overwritten from ft_meas.toe_space in __init__
     AC:   float=5.0  # 5 mm constant
     def __init__(self,  ft_meas: foot_c):
-        self.AB = ft_meas.foot_len
-        self.BD = ft_meas.toe_space
-        self.CJ = ft_meas.foot_len * 2.0 / 3.0
+        self.AB  = ft_meas.foot_len
+        self.BD  = ft_meas.toe_space
+        self.CJ  = ft_meas.foot_len * 2.0 / 3.0
         self.JJ1 = ft_meas.joint / 6.0
         self.JJ2 = ft_meas.joint / 6.0 + 10.0
-        self.AH = self.AB / 5.0
-        self.H1H2 = ft_meas.heel / 5.0 - (ft_meas.heel_height-20.0) / 10.0
-        self.AD = self.AB + self.BD
-        self.B1B2 = 0.6 * (self.JJ1 + self.JJ2)
+        self.AH  = self.AB / 5.0
+        self.H1H2= ft_meas.heel / 5.0 - (ft_meas.heel_height-20.0) / 10.0
+        self.AD  = self.AB + self.BD
+        self.B1B2= 0.6 * (self.JJ1 + self.JJ2)
         self.H3K = 0.0
     def print_(self):
         print("insole_len_c\n",
-              "AB       = %10.4f\n"%self.AB,
-              "BD       = %10.4f\n"%self.BD,
-              "AC       = %10.4f\n"%self.AC,
-              "CJ       = %10.4f\n"%self.CJ,
-              "JJ1      = %10.4f\n"%self.JJ1,
-              "JJ2      = %10.4f\n"%self.JJ2,
-              "AH      = %10.4f\n"%self.AH,
-              "H1H2    = %10.4f\n"%self.H1H2,
-              "H3K     = %10.4f\n"%self.H3K)
+              "\tAB    = %8.4f\n"%self.AB,
+              "\tBD    = %8.4f\n"%self.BD,
+              "\tAC    = %8.4f\n"%self.AC,
+              "\tCJ    = %8.4f\n"%self.CJ,
+              "\tJJ1   = %8.4f\n"%self.JJ1,
+              "\tJJ2   = %8.4f\n"%self.JJ2,
+              "\tAH    = %8.4f\n"%self.AH,
+              "\tH1H2  = %8.4f\n"%self.H1H2,
+              "\tH3K   = %8.4f\n"%self.H3K)
 
 
 class insole_layout:
@@ -206,7 +207,7 @@ outline_bc      = None   # used by xs_0, xs_1, xs_3
 
 def build():
     global doc, sketch_insole, ft_measurements, insole_lens, insole_dwg, outline_bc
-    importlib.reload(sp)
+    #importlib.reload(sp)
 
     doc, sketch_insole = hf.Doc_Sketch(None, sketch_name)
     doc.recompute()

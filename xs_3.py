@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import helper_funcs as hf
 import last_insole
 import last_profile
+import control_curves
 import xs_base
 
 if False:
@@ -20,7 +21,7 @@ if False:
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
 sketch_name = "Sketch_xs_3"
-doc, sketch_xs3 = hf.Doc_Sketch(last_insole.doc, sketch_name)
+doc, sketch_xs3 = hf.Doc_Sketch(None, sketch_name)
 
 
 @dataclass
@@ -49,13 +50,13 @@ class xs_3_lens_c:
 
         # HT1/HT2 from medial/lateral highwater BSpline intersections
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in profile_dwg.medial_highwater_bc.getPoles()]
+                    for p in control_curves.medial_highwater_bc.getPoles()]
         med_hw_3d = Part.BSplineCurve()
         med_hw_3d.buildFromPolesMultsKnots(
             poles_3d,
-            profile_dwg.medial_highwater_bc.getMultiplicities(),
-            profile_dwg.medial_highwater_bc.getKnots(),
-            False, profile_dwg.medial_highwater_bc.Degree)
+            control_curves.medial_highwater_bc.getMultiplicities(),
+            control_curves.medial_highwater_bc.getKnots(),
+            False, control_curves.medial_highwater_bc.Degree)
         g_T1_pts = hf.get_bspline_plane_intersection_new(
             med_hw_3d,
             xs_base.xs_3_placement.Base,
@@ -65,13 +66,13 @@ class xs_3_lens_c:
         self.HT1 = (g_T1 - xs_base.g_K).dot(xs_base.gvec_K_I)
 
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in profile_dwg.lateral_highwater_bc.getPoles()]
+                    for p in control_curves.lateral_highwater_bc.getPoles()]
         lat_hw_3d = Part.BSplineCurve()
         lat_hw_3d.buildFromPolesMultsKnots(
             poles_3d,
-            profile_dwg.lateral_highwater_bc.getMultiplicities(),
-            profile_dwg.lateral_highwater_bc.getKnots(),
-            False, profile_dwg.lateral_highwater_bc.Degree)
+            control_curves.lateral_highwater_bc.getMultiplicities(),
+            control_curves.lateral_highwater_bc.getKnots(),
+            False, control_curves.lateral_highwater_bc.Degree)
         g_T2_pts = hf.get_bspline_plane_intersection_new(
             lat_hw_3d,
             xs_base.xs_3_placement.Base,

@@ -7,7 +7,7 @@ import helper_funcs as hf
 import last_insole
 import last_profile
 import inspect
-import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
+import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
 import xs_base
 import control_curves
 #import analyze_uv_matrix as analyz
@@ -19,7 +19,7 @@ if True:
     importlib.reload(last_profile)
     importlib.reload(control_curves)  # reloads _OVERRIDES and build() definition
     importlib.reload(xs_base)         # xs_base.build() calls control_curves.build() first
-    for m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8]:
+    for m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9]:
         importlib.reload(m)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
@@ -35,6 +35,7 @@ xs_list = [
     (xs_6.xs_6, xs_base.xs_6_placement),
     (xs_7.xs_7, xs_base.xs_7_placement),
     (xs_8.xs_8, xs_base.xs_8_placement),
+    (xs_9.xs_9, xs_base.xs_9_placement),
 ]
 
 def _hartley_judd_knots(params, degree):
@@ -46,12 +47,12 @@ def _hartley_judd_knots(params, degree):
     mults  = [degree + 1] + [1] * len(interior) + [degree + 1]
     return knots, mults
 
-degree = xs_base.NURBS_DEGREE
+degree = 2 #xs_base.NURBS_DEGREE
 
 # xs_scalars_list[i].H is the girth-scale center for xs_list[i]
 xs_scalars_list = [
     xs_base.xs_0, xs_base.xs_1, xs_base.xs_2, xs_base.xs_3,
-    xs_base.xs_4, xs_base.xs_5, xs_base.xs_6, xs_base.xs_7, xs_base.xs_8,
+    xs_base.xs_4, xs_base.xs_5, xs_base.xs_6, xs_base.xs_7, xs_base.xs_8, xs_base.xs_9,
 ]
 
 # Per-section multiplier on c_scale and t_scale (applied on top of global values).
@@ -85,21 +86,23 @@ def _apply_girth_scale(pts, h, c_scale, t_scale, crisp):
 
 # Transform each section's control points from sketch-local to global 3D
 # heel_end_row prepended so degree-2 u smooths through the heel — no separate heel cap needed
-_sec_names = ['xs_0','xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8']
-rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]
+_sec_names = ['xs_0','xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8','xs_9']
+rows = [list(xs_base.get_heel_end_row(crisp_sole=True ))] #xs_base.CRISP_SOLE or True ))]
 for (xs, placement), xs_sc, sec_name in zip(xs_list, xs_scalars_list, _sec_names):
     pl = placement * hf.yz_xy_place
-    pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)]
+    pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=True)] #xs_base.CRISP_SOLE)]
+    """
     if False:
         _sg  = _SECTION_GIRTH_SCALE.get(sec_name, 1.0)
         pts = _apply_girth_scale(pts, xs_sc.H,
                                  xs_base.C_SCALE * _sg, xs_base.T_SCALE * _sg,
                                  xs_base.CRISP_SOLE)
+    """
     rows.append(pts)
 
 rows.append(list(xs_base.xs_toe_end_row))
 
-u_count = len(rows)    # 11: heel_end + 9 sections + toe_end
+u_count = len(rows)    # 12: heel_end + 10 sections + toe_end
 v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 H2
 #print(f"u_count={u_count}, v_count={v_count}")
 
@@ -164,8 +167,10 @@ def _ring_cap(ring, ring_at_u0=True):
         udegree=1, vdegree=degree)
     return nc.toShape()
 
-_heel_ring = list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))
+_heel_ring = list(xs_base.get_heel_end_row(crisp_sole=True)) #xs_base.CRISP_SOLE))
 _toe_ring  = list(xs_base.xs_toe_end_row)
+print("Toe Ring !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+print(_toe_ring)
 heel_cap_shape = _ring_cap(_heel_ring, ring_at_u0=True)
 toe_cap_shape  = _ring_cap(_toe_ring,  ring_at_u0=False)
 

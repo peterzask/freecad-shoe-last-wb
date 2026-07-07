@@ -15,33 +15,36 @@ if False:
     importlib.reload(last_insole)
     importlib.reload(last_profile)
     importlib.reload(xs_base)
-    
+
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
 
-sketch_name = "Sketch_xs_8"
-doc, sketch_xs8 = hf.Doc_Sketch(None, sketch_name)
+sketch_name = "Sketch_xs_9"
+doc, sketch_xs9 = hf.Doc_Sketch(None, sketch_name)
 
 
 @dataclass
-class xs_8_lens_c:
+class xs_9_lens_c:
     def __init__(self, p_lens:     last_profile.profile_lengths_c,
                        insole_dwg:  last_insole.insole_layout,
                        profile_dwg: last_profile.draw_profile_c):
-        # HC from front_top_bc/xs_8 plane intersection
+        # HC from front_top_bc/xs_9 plane intersection
         g_C = hf.get_bspline_plane_intersection_new(
             xs_base.bc_3d_front_top,
-            xs_base.xs_8_placement.Base, xs_base.gvec_uJB1)[0]
-        self.HC  = (g_C - xs_base.xs_8_placement.Base).dot(xs_base.gvec_uJB1_localY)
-        self.CC1 = xs_base.xs_8.CC1
-        self.CC2 = xs_base.xs_8.CC2
-        self.HC1 = xs_base.xs_8.HC1
-        self.HC2 = xs_base.xs_8.HC2
+            xs_base.xs_9_placement.Base, xs_base.gvec_uJB1)[0]
+        self.HC  = (g_C - xs_base.xs_9_placement.Base).dot(xs_base.gvec_uJB1_localY)
+        self.CC1 = xs_base.xs_9.CC1
+        self.CC2 = xs_base.xs_9.CC2
+        self.HC1 = xs_base.xs_9.HC1
+        self.HC2 = xs_base.xs_9.HC2
 
     def build(self):
-        sc    = xs_base.xs_8
-        _H_y  = (sc.H  - xs_base.xs_8_placement.Base).dot(xs_base.gvec_uJB1_localY)
-        _H3_y = (sc.H3 - xs_base.xs_8_placement.Base).dot(xs_base.gvec_uJB1_localY)
+        sc    = xs_base.xs_9
+        # H/H3 from bc_3d_bottom is unreliable this close to B1; use g_B1 height directly.
+        # +3mm along local_up for feather-edge taper at toe tip.
+        _B1_y = (xs_base.g_B1 - xs_base.xs_9_placement.Base).dot(xs_base.gvec_uJB1_localY)
+        _H_y  = _B1_y + 3.0
+        _H3_y = _B1_y + 3.0
         self.H  = App.Vector(0,       _H_y,  0)
         self.H1 = App.Vector( sc.HH1, _H_y,  0)
         self.H2 = App.Vector( sc.HH2, _H_y,  0)
@@ -83,16 +86,16 @@ class xs_8_lens_c:
 
 
 # --- Build and draw ---
-xs_8 = xs_8_lens_c(last_profile.p_lens,
+xs_9 = xs_9_lens_c(last_profile.p_lens,
                    last_insole.insole_dwg, last_profile.profile_dwg)
-xs_8.build()
-xs_8.draw_circles(sketch_xs8)
-xs_8.draw_lines(sketch_xs8)
+xs_9.build()
+xs_9.draw_circles(sketch_xs9)
+xs_9.draw_lines(sketch_xs9)
 
-plen, plen_in = xs_8.perimeter_length()
-print(f"xs_8 perimeter = {plen:.1f} mm  ({plen_in:.3f} in)")
+plen, plen_in = xs_9.perimeter_length()
+print(f"xs_9 perimeter = {plen:.1f} mm  ({plen_in:.3f} in)")
 
-sketch_xs8.Placement = xs_base.xs_8_placement * hf.yz_xy_place
+sketch_xs9.Placement = xs_base.xs_9_placement * hf.yz_xy_place
 
 view = FreeCADGui.ActiveDocument.ActiveView
 view.fitAll()
@@ -103,6 +106,6 @@ print("\nThe end\n")
 
 
 def main():
-    print("xs_8 main")
+    print("xs_9 main")
 if __name__ == "__main__":
     main()

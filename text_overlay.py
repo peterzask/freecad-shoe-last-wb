@@ -48,7 +48,10 @@ def main():
     vo = App.Vector(last_insole.insole_lens.CJ+2,0,0)
     # Text offset move text a little to upper right of point
     text_offset=App.Vector(2,2,0)
-    font_path = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
+    import os as _os
+    font_path = _os.path.expanduser("~/.local/share/fonts/FreeSansBold.ttf")
+    if not _os.path.exists(font_path):
+        font_path = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
 
 
     def build_profile_text():

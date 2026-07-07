@@ -20,7 +20,7 @@ print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})
 
 
 sketch_name = "Sketch_xs_4"
-doc, sketch_xs4 = hf.Doc_Sketch(last_insole.doc, sketch_name)
+doc, sketch_xs4 = hf.Doc_Sketch(None, sketch_name)
 
 
 @dataclass

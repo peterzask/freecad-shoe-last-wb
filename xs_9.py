@@ -56,6 +56,10 @@ class xs_9_lens_c:
         self.C  = App.Vector(0,        self.HC, 0)
         self.C1 = App.Vector( self.CC1, self.HC1, 0)
         self.C2 = App.Vector(-self.CC2, self.HC2, 0)
+        # TT2 comes from locus fallback (xs_9 is beyond sampled range); can be less
+        # lateral than CC2, inverting the v-direction and causing a fold in quad faces.
+        if self.T2.x > self.C2.x:
+            self.T2 = App.Vector(self.C2.x - 0.5, self.T2.y, 0)
         self.ctrl = xs_base.xs_ctrl_pts_c(
             H3=self.H3, H=self.H,  H1=self.H1, H2=self.H2,
             T=self.T,   T1=self.T1, T2=self.T2,

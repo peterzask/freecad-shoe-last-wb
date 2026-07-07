@@ -7,16 +7,12 @@ import helper_funcs as hf
 import last_insole
 import last_profile
 import xs_base
-import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8
+import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
 import uv_0
 
-#For now, user must know everthing must be up to date before running.
-#importlib.reload(hf)
-#importlib.reload(last_insole)
-#importlib.reload(last_profile)
-#importlib.reload(xs_base)
-#for _m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8]:
-#    importlib.reload(_m)
+importlib.reload(xs_base)
+for _m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9]:
+    importlib.reload(_m)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
@@ -31,15 +27,16 @@ xs_list = [
     (xs_6.xs_6, xs_base.xs_6_placement),
     (xs_7.xs_7, xs_base.xs_7_placement),
     (xs_8.xs_8, xs_base.xs_8_placement),
+    (xs_9.xs_9, xs_base.xs_9_placement),
 ]
-crisp_sole = False #xs_base.CRISP_SOLE
+crisp_sole = False #xs_base.CRISP_SOLE #  should always be False, 0 width wireframes crash
 #rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]  # heel end cap (global 3D)
 rows = [list(xs_base.get_heel_end_row(crisp_sole))]  # heel end cap (global 3D)
 for xs, placement in xs_list:
     pl = placement * hf.yz_xy_place
     #rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)])
     rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole)])
-
+rows.append(list(xs_base.xs_toe_end_row_plain))
 
 u_count = len(rows)
 v_count = len(rows[0])

@@ -71,7 +71,8 @@ bc_3d_heel = bc_3d_bottom = bc_3d_front_top = None
 bc_3d_edge_list = []
 xs_0 = xs_1 = xs_2 = xs_3 = xs_4 = xs_5 = xs_6 = xs_7 = xs_8 = xs_9 = None
 xs_heel_end_row = None
-xs_toe_end_row = None
+xs_toe_end_row = None        # 10 pts, crisp (doubled H1) — used by uv_0
+xs_toe_end_row_plain = None  # 9 pts, non-crisp — used by make_wireframe
 
 # --- Dataclasses ---
 
@@ -293,7 +294,7 @@ def build():
     global xs_8_placement, xs_9_placement, xs_toe_end_placement
     global bc_3d_heel, bc_3d_bottom, bc_3d_front_top, bc_3d_edge_list
     global xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
-    global xs_heel_end_row, xs_toe_end_row
+    global xs_heel_end_row, xs_toe_end_row, xs_toe_end_row_plain
     global NURBS_DEGREE, CRISP_SOLE, C_SCALE, T_SCALE
 
     #importlib.reload(sp)
@@ -406,7 +407,7 @@ def build():
     last_profile.build_xs_plane_pi("xs_8_ToeEnd", xs_8_placement,
                                    Show_Plane[8])
 
-    xs_9_tvec = g_J + gvec_uJB1 * (_d_jb1_total - 5.0)
+    xs_9_tvec = g_J + gvec_uJB1 * (_d_jb1_total - 10.0)
     xs_9_normal = App.Vector(gvec_uJB1)
     xs_9_placement = App.Placement(xs_9_tvec, App.Rotation(hf.nX, xs_9_normal))
     last_profile.build_xs_plane_pi("xs_9_ToeEnd2", xs_9_placement,
@@ -488,11 +489,12 @@ def build():
     _c2_isects = control_curves.front_top_bc.intersect(
         control_curves.C2_profile_bc)
 
-    _hw3 = _prof_to_3d(_hw_isects[0])
+    _hw3  = _prof_to_3d(_hw_isects[0])
     _c1_3 = _prof_to_3d(_c1_isects[1])
     _c2_3 = _prof_to_3d(_c2_isects[1])
-    # C converges with C1/C2 at toe end (crown and shoulders meet); use C1's height
-    _c_3 = App.Vector(_c1_3.x, 0, _c1_3.z)
+    # C center: average of C1 and C2 intersections — keeps C between C1 and C2 in x,
+    # preventing face inversions at the xs_9→toe_end transition.
+    _c_3  = App.Vector((_c1_3.x + _c2_3.x) / 2, 0, (_c1_3.z + _c2_3.z) / 2)
 
     print(
         f"toe_end_row  hw={_hw3}  C={_c_3}  C1={_c1_3}  C2={_c2_3}  B1={g_B1}")
@@ -509,6 +511,7 @@ def build():
         _hw3 - _toe_cap_lat,  # T2: highwater lateral
         _g_B1_fe - _toe_cap_lat,  # H2: close seam
     ]
+    xs_toe_end_row_plain = _ter
     if True or CRISP_SOLE:
         xs_toe_end_row = [_ter[0], _ter[1], _ter[2], _ter[2]] + _ter[3:]
     else:

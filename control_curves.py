@@ -201,8 +201,10 @@ def _section_geometry():
     gvec_J1_J = hf.xz_xy_place * (pd.J1 - pd.J).normalize()
     gvec_uJB1 = hf.xz_xy_place * (pd.B1 - pd.J).normalize()
     gvec_uJB1y = App.Vector(-gvec_uJB1.z, 0, gvec_uJB1.x)
-    g_X = skp.Placement.multVec(pd.X)
-    jb1_len = (g_X - g_J).dot(gvec_uJB1)
+    g_X  = skp.Placement.multVec(pd.X)
+    g_B1 = skp.Placement.multVec(pd.B1)
+    jb1_len       = (g_X  - g_J).dot(gvec_uJB1)
+    _d_jb1_total  = (g_B1 - g_J).dot(gvec_uJB1)
 
     n_uHB = gvec_uHB
     n_KbE = App.Vector(gvec_Kb_E.z, 0, -gvec_Kb_E.x)
@@ -220,7 +222,7 @@ def _section_geometry():
         ('xs_6', g_J + gvec_uJB1 * (jb1_len / 3.0), n_JB1, gvec_uJB1y),
         ('xs_7', g_J + gvec_uJB1 * (jb1_len * 2.0 / 3.0), n_JB1, gvec_uJB1y),
         ('xs_8', g_J + gvec_uJB1 * jb1_len, n_JB1, gvec_uJB1y),
-        ('xs_9', g_J + gvec_uJB1 * (jb1_len + 8.0), n_JB1, gvec_uJB1y),
+        ('xs_9', g_J + gvec_uJB1 * (_d_jb1_total - 10.0), n_JB1, gvec_uJB1y),
     ]
 
 

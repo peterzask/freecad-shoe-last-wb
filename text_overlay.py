@@ -27,13 +27,14 @@ def main():
     doc, sketch_insole_text = hf.Doc_Sketch(None, sketch_name)
 
     #Assemble profile drawing point names and positions.
-    p_cp_text_names = ["H","K1","K","Kb","J","B1","B2","J1","H1","E","C5E_intercept","C5","H2"]            
-    p_cp_show_switch= [  1,   1,  1,   1,  1,   1,   1,   1,   1,  1,              1,   1,   1]
+    p_cp_text_names = ["H","K1","K","Kb","J","B","B1","B2","J1","H1","E","C5E_intercept","C5","H2"]            
+    p_cp_show_switch= [  1,   1,  1,   1,  1,   1,  1,   1,   1,   1,  1,              1,   1,   1]
     p_cp_positions =[ App.Vector(last_profile.profile_dwg.H),             
         App.Vector(last_profile.profile_dwg.K1),            
         App.Vector(last_profile.profile_dwg.K),             
         App.Vector(last_profile.profile_dwg.Kb),            
         App.Vector(last_profile.profile_dwg.J),             
+        App.Vector(last_profile.profile_dwg.B),             
         App.Vector(last_profile.profile_dwg.B1),            
         App.Vector(last_profile.profile_dwg.B2),            
         App.Vector(last_profile.profile_dwg.J1),            

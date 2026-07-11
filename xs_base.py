@@ -43,8 +43,8 @@ Show_Plane = [
     False,
     False,  # xs_8
     False,  # xs_9
-    False
-]  # xs_toe_end
+    False,  # xs_toe_end
+]
 
 # Derived from shape_params — kept as module names so uv_0.py / xs_N.py don't need changing
 """
@@ -67,10 +67,13 @@ xs_0_normal = xs_1_normal = xs_2_normal = xs_3_normal = xs_4_normal = None
 xs_0_placement = xs_1_placement = xs_2_placement = xs_3_placement = None
 xs_4_placement = xs_5_placement = xs_6_placement = xs_7_placement = None
 xs_8_placement = xs_9_placement = xs_toe_end_placement = None
+xs_heel_near_placement = None
 bc_3d_heel = bc_3d_bottom = bc_3d_front_top = None
 bc_3d_edge_list = []
 xs_0 = xs_1 = xs_2 = xs_3 = xs_4 = xs_5 = xs_6 = xs_7 = xs_8 = xs_9 = None
+xs_heel_near = None
 xs_heel_end_row = None
+xs_heel_near_row = None
 xs_toe_end_row = None        # 10 pts, crisp (doubled H1) — used by uv_0
 xs_toe_end_row_plain = None  # 9 pts, non-crisp — used by make_wireframe
 
@@ -178,53 +181,28 @@ def compute_xs_scalars(placement: App.Placement,
     H1 = App.Vector(H.x, HH1, H.z)
     H2 = App.Vector(H.x, HH2, H.z)
 
-    #calls 3 deep in functions to get T1?
-    # T1 is medial_high_water intersect xs_plane  intersect last outline
-    #
-    class T1_temp:
-        A = hf.get_bspline_plane_intersection_new(
-            control_curves.bc_medial_last_outline, origin, normal)[0]
-        hf.p_vec(A, "A XXX")
-
     _h = control_curves.xs_heights[xs_idx if xs_idx is not None else 8]
-    g_T1 = _h['g_T1']
-    g_T2 = _h['g_T2']
-
-    if g_T1 is not None:
-        d_T1 = (g_T1 - g_H).dot(g_uHJ)
-        if d_T1 >= d_HJ:
-            d_T1 = d_HJ + (g_T1 - g_J).dot(gvec_uJB1)
-        try:
-            TT1 = hf.get_bspline_plane_intersection_new(
-                control_curves.bc_medial_last_outline,
-                App.Vector(C_x + d_T1, 0, 0), hf.nX)[0].y
-        except IndexError:
-            print(
-                f"Error ***************************************** TT1 set to = HH1{HH1}"
-            )
-            TT1 = HH1
-    else:
-        print("TT1 = HH1, line 195 in xs_base.py, xs_idx = {xs_idx}")
-        TT1 = HH1
-
     HT1 = _h['HT1'] or 0.0
-    hf.p_vec(App.Vector(TT1, HT1, 0), "TT1 HT1")
-
-    if g_T2 is not None:
-        d_T2 = (g_T2 - g_H).dot(g_uHJ)
-        if d_T2 >= d_HJ:
-            d_T2 = d_HJ + (g_T2 - g_J).dot(gvec_uJB1)
-        try:
-            TT2 = hf.get_bspline_plane_intersection_new(
-                control_curves.bc_lateral_last_outline,
-                App.Vector(C_x + d_T2, 0, 0), hf.nX)[0].y
-        except IndexError:
-            TT2 = HH2
-    else:
-        TT2 = HH2
     HT2 = _h['HT2'] or 0.0
 
     _x_clamp = min(d, _xs8_x)
+    try:
+        TT1 = hf.get_bspline_plane_intersection_new(
+            control_curves.bc_medial_last_outline,
+            App.Vector(_x_clamp, 0, 0), hf.nX)[0].y
+    except IndexError:
+        print(f"Error: TT1 fallback to HH1={HH1:.2f} at x={_x_clamp:.2f}")
+        TT1 = HH1
+    try:
+        TT2 = hf.get_bspline_plane_intersection_new(
+            control_curves.bc_lateral_last_outline,
+            App.Vector(_x_clamp, 0, 0), hf.nX)[0].y
+    except IndexError:
+        print(f"Error: TT2 fallback to HH2={HH2:.2f} at x={_x_clamp:.2f}")
+        TT2 = HH2
+
+    hf.p_vec(App.Vector(TT1, HT1, 0), "TT1 HT1")
+    hf.p_vec(App.Vector(TT2, HT2, 0), "TT2 HT2")
     try:
         CC1 = hf.get_bspline_plane_intersection_new(
             control_curves.C1_insole_medial, App.Vector(_x_clamp, 0, 0),
@@ -270,11 +248,28 @@ def get_heel_end_row(crisp_sole=False):
     return [r[0], r[1], r[2], r[2], r[3], r[4], r[5], r[6], r[7], r[8]]
 
 
+def get_xs_heel_near_row(crisp_sole=False):
+    """Return heel-near row sampled from bc_3d_heel at t=0.25/0.50/0.75; bows to heel curve."""
+    r = xs_heel_near_row
+    if not crisp_sole:
+        return r
+    return [r[0], r[1], r[2], r[2], r[3], r[4], r[5], r[6], r[7], r[8]]
+
+
 def _insole_medial_y_at_spine_d(d: float) -> float:
     pt = g_J + gvec_uJB1 * d
     hits = hf.get_bspline_plane_intersection_new(
         control_curves.insole_bc_medial, App.Vector(pt.x, 0, 0), hf.nX)
     return hits[0].y if hits else 0.0
+
+
+def insolePoint_from_profilePoint(ptV: App.Vector) -> App.Vector:
+    """Map a global 3D profile point (J-to-H region) to its insole plane location along J→A."""
+    g_JH  = g_H - g_J
+    g_uJH = App.Vector(g_JH).normalize()
+    g_uJA = (last_insole.insole_dwg.A - g_J).normalize()
+    d = (ptV - g_J).dot(g_uJH)
+    return g_uJA * d + g_J
 
 
 # --- Build ---
@@ -292,9 +287,11 @@ def build():
     global xs_0_placement, xs_1_placement, xs_2_placement, xs_3_placement
     global xs_4_placement, xs_5_placement, xs_6_placement, xs_7_placement
     global xs_8_placement, xs_9_placement, xs_toe_end_placement
+    global xs_heel_near_placement
     global bc_3d_heel, bc_3d_bottom, bc_3d_front_top, bc_3d_edge_list
     global xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
-    global xs_heel_end_row, xs_toe_end_row, xs_toe_end_row_plain
+    global xs_heel_near
+    global xs_heel_end_row, xs_heel_near_row, xs_toe_end_row, xs_toe_end_row_plain
     global NURBS_DEGREE, CRISP_SOLE, C_SCALE, T_SCALE
 
     #importlib.reload(sp)
@@ -333,6 +330,10 @@ def build():
     d_HJ = (g_J - g_H).dot(g_uHJ)
 
     # --- Cross-section placements ---
+    xs_heel_near_tvec = g_H + gvec_uHB * (last_insole.insole_lens.H1H2 / 8.0)
+    xs_heel_near_placement = App.Placement(xs_heel_near_tvec,
+                                           App.Rotation(hf.nX, App.Vector(gvec_uHB)))
+
     xs_0_tvec = g_H + gvec_uHB * (last_insole.insole_lens.H1H2 / 4.0)
     xs_0_normal = App.Vector(gvec_uHB)
     xs_0_placement = App.Placement(xs_0_tvec, App.Rotation(hf.nX, xs_0_normal))
@@ -427,6 +428,7 @@ def build():
     bc_3d_edge_list.append(bc_3d_front_top.toShape())
 
     # --- Scalar samples for each section (xs_heights[i] from control_curves) ---
+    xs_heel_near = compute_xs_scalars(xs_heel_near_placement, gvec_uHC5, xs_idx=0)
     xs_0 = compute_xs_scalars(xs_0_placement, gvec_uHC5, xs_idx=0)
     xs_1 = compute_xs_scalars(xs_1_placement, gvec_uHC5, xs_idx=1)
     xs_2 = compute_xs_scalars(xs_2_placement, gvec_uKbE, xs_idx=2)
@@ -452,6 +454,24 @@ def build():
         _hp[0] - _cap_lat,  # C2: top-heel lateral
         _hp[1] - _cap_lat,  # T2: mid-heel lateral
         _hp[2] - _cap_lat,  # H2: heel sole lateral (close seam)
+    ]
+
+    # --- Heel near row: bc_3d_heel sampled at intermediate t values ---
+    # Bows to heel_bc shape rather than being a parallel slice like xs_0.
+    _t_c, _t_m, _t_h = 0.15, 0.30, 0.92
+    _p_c = bc_3d_heel.value(_t_c)
+    _p_m = bc_3d_heel.value(_t_m)
+    _p_h = bc_3d_heel.value(_t_h)
+    xs_heel_near_row = [
+        _p_h - _cap_lat,       # H2: lateral (seam)
+        App.Vector(_p_h),      # H3: center
+        _p_h + _cap_lat,       # H1: medial
+        _p_m + _cap_lat,       # T1: medial
+        _p_c + _cap_lat,       # C1: medial
+        App.Vector(_p_c),      # C:  top center
+        _p_c - _cap_lat,       # C2: lateral
+        _p_m - _cap_lat,       # T2: lateral
+        _p_h - _cap_lat,       # H2: close seam
     ]
 
     # --- Toe end cap: binary search for last plane where insole half-width >= threshold ---

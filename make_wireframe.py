@@ -7,10 +7,12 @@ import helper_funcs as hf
 import last_insole
 import last_profile
 import xs_base
+import xs_heel_near
 import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
 import uv_0
 
 importlib.reload(xs_base)
+importlib.reload(xs_heel_near)
 for _m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9]:
     importlib.reload(_m)
 
@@ -31,7 +33,9 @@ xs_list = [
 ]
 crisp_sole = False #xs_base.CRISP_SOLE #  should always be False, 0 width wireframes crash
 #rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]  # heel end cap (global 3D)
-rows = [list(xs_base.get_heel_end_row(crisp_sole))]  # heel end cap (global 3D)
+rows = [list(xs_base.get_heel_end_row(crisp_sole))]       # heel end cap
+pl_hn = xs_base.xs_heel_near_placement * hf.yz_xy_place
+rows.append([pl_hn.multVec(pv) for pv in xs_heel_near.xs_heel_near.ctrl.control_points(crisp_sole)])
 for xs, placement in xs_list:
     pl = placement * hf.yz_xy_place
     #rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)])

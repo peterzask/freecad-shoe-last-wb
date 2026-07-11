@@ -253,11 +253,11 @@ def build():
     # Rows 1 & 2: T1/T2 — last outline (XY) + highwater profile (XZ)
     # =========================================================================
     # XY: last outline medial / lateral (T1/T2 Y-width loci)
-    A0 = idw.A  #idw.C  + App.Vector(-5, 0, 0)
+    A0 = idw.A + App.Vector(-8.3, 0, 0)                 #z++ risky place to change A0
     #lC2   = idw.C  + App.Vector(0,  5 + 17, 0)
     #lC3   = idw.C  + App.Vector(0, -5 - 17, 0)
-    lC2 = idw.A + App.Vector(0, 5 + 17, 0)
-    lC3 = idw.A + App.Vector(0, -5 - 17, 0)
+    lC2 = idw.A + App.Vector(-8.3, 5 + 17, 0)     #z++
+    lC3 = idw.A + App.Vector(-8.3, -5 - 17, 0)
     H1_t = idw.H1 + App.Vector(0, 2, 0)
     H2_t = idw.H2 + App.Vector(0, -2, 0)
     #B1_t  = idw.B1 + App.Vector(1,  1, 0)
@@ -275,12 +275,12 @@ def build():
     bc_medial_last_outline.buildFromPoles(bc_medial_last_outline_poles, False,
                                           2, False)
     #    [A0, lC2, H1_t, om_med_K, idw.J1, B1_t, D_t], False, 2, False)
-    #sketch_io.addGeometry(bc_medial_last_outline) # changed, added this line
+    sketch_io.addGeometry(bc_medial_last_outline) # changed, added this line
 
     #sandbox 1A start
     #Row 1 input curve. Draw an overlay of poles used for the last outline medial side
     #These bspline curve poles are edited by changing there positions above
-    if Draw_Sketch_Overlay_of_Medial_Last_Outline := False:
+    if Draw_Sketch_Overlay_of_Medial_Last_Outline := True:
         #sketch_name = "sketch_insole_overlay"
         #doc,sketch_io = hf.Doc_Sketch(last_insole.doc,sketch_name)
         _pt_list = [A0, lC2, H1_t, om_med_K, idw.J1, B1_t, D_t]
@@ -338,8 +338,9 @@ def build():
     #Row 2 Input curve
     class _lat:
         _dw = last_insole.insole_dwg
-        A0 = _dw.A
-        lC3 = _dw.A + App.Vector(0, -5 - 17, 0)
+        #A0 = _dw.A  
+        A0 = _dw.A  + App.Vector(-8.3,0,0)
+        lC3 = _dw.A + App.Vector(-8.3, -5 - 17, 0)
         H2_t = _dw.H2 + App.Vector(0, -2, 0)
         #B2_t  = _dw.B2 + App.Vector(1, -1, 0) old
         B2_t = _dw.B2 + App.Vector(9, -7, 0)

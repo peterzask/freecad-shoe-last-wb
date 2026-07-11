@@ -1,3 +1,4 @@
+import sys
 import math
 import inspect
 import FreeCAD as App
@@ -174,11 +175,20 @@ def print_placement(placement: App.Rotation, name:str=None):
     return
     
     
+# Find normal intersection P of free point p and line p0 to p1
 def pt_intersect_line(p:App.Vector, p0:App.Vector, p1:App.Vector):
-    t = (p-p0).dot(p1-p0) / (p1-p0).dot(p1-p0)
-    P = (1-t)*p+t*p0
+    # ((p0-p) + (p1-p0)t) dot (p1-p0) = 0
+    # t= (p-p0) dot (p1-p0) / |p1-p0|^2
+    _a = p1-p0
+    mag_2 = _a.dot(_a)
+    if mag_2 < 1e-7:
+        print("Exiting: divide by < 1e-7 in pt_intersect_line")
+        sys.exit(1)
+    t = (p-p0).dot(_a)/mag_2
+    P = p0 + t*(p1-p0)
     return t,P
- 
+
+
 # Plane model: 0  =  u.dot(P_projected) -d
 def point_on_plane(uPlane: App.Vector, d: float, Point: App.Vector):
     L = uPlane.Length   # make sure it's a unit vector
@@ -213,6 +223,33 @@ def intersect_lines(p0: App.Vector, p1: App.Vector, p2: App.Vector, p3: App.Vect
     PtA = (p0 + t*(p1-p0))
     PtB = (p2 + s*(p3-p2))
     return PtA,PtB
+
+
+def scaler_proj_a_onto_b(a: App.Vector, b: App.Vector, ref: App.Vector) -> float:
+    """Scalar projection of (a-ref) onto unit(b-ref)."""
+    A = a - ref
+    B = (b - ref).normalize()
+    return A.dot(B)
+
+
+def vector_proj_a_onto_b(a: App.Vector, b: App.Vector, ref: App.Vector) -> App.Vector:
+    """Vector projection of (a-ref) onto direction (b-ref), returned in world coords."""
+    A = a - ref
+    B = (b - ref).normalize()
+    return A.dot(B) * B + ref
+
+
+def dist_bsc2bsc(c1: "Part.BSplineCurve", c2: "Part.BSplineCurve") -> App.Vector:
+    """Nearest point on c1 to c2 (or intersection point when they cross).
+    Prints an error if the minimum distance exceeds 1 mm (likely a trivial endpoint result)."""
+    dist, vectors, infos = c1.toShape().distToShape(c2.toShape())
+    p1, p2 = vectors[0]
+    d2 = (p1 - p2).Length
+    if d2 > 1.0:
+        p_vec(p1, "p1 in dist_bsc2bsc")
+        p_vec(p2, "p2 in dist_bsc2bsc")
+        print(f"dist_bsc2bsc: trivial result, distance={d2:.3f} mm")
+    return p1
 
 
 # Example usage:

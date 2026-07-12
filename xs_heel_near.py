@@ -38,7 +38,7 @@ class xs_heel_near_lens_c:
         _heel_shifted = xs_base.bc_3d_heel.copy()
         _heel_shifted.translate(_p_uHD * 5.0)
         _bc_hw_med = control_curves._bc_to_3d(control_curves.medial_highwater_bc)
-        _p1 = hf.dist_bsc2bsc(_heel_shifted, _bc_hw_med)
+        _p1, _ = hf.dist_bsc2bsc(_heel_shifted, _bc_hw_med)
         _ht = (_p1 - _origin).dot(xs_base.gvec_uHC5)
         print(f"xs_heel_near HT1={_ht:.2f} (shifted heel×hw_med)")
         self.HT1 = _ht

@@ -239,8 +239,9 @@ def vector_proj_a_onto_b(a: App.Vector, b: App.Vector, ref: App.Vector) -> App.V
     return A.dot(B) * B + ref
 
 
-def dist_bsc2bsc(c1: "Part.BSplineCurve", c2: "Part.BSplineCurve") -> App.Vector:
-    """Nearest point on c1 to c2 (or intersection point when they cross).
+def dist_bsc2bsc(c1: "Part.BSplineCurve", c2: "Part.BSplineCurve") -> "tuple[App.Vector, App.Vector]":
+    """Nearest points between c1 and c2 (or intersection point when they cross).
+    Returns (p1, p2): p1 on c1, p2 on c2.
     Prints an error if the minimum distance exceeds 1 mm (likely a trivial endpoint result)."""
     dist, vectors, infos = c1.toShape().distToShape(c2.toShape())
     p1, p2 = vectors[0]
@@ -249,7 +250,7 @@ def dist_bsc2bsc(c1: "Part.BSplineCurve", c2: "Part.BSplineCurve") -> App.Vector
         p_vec(p1, "p1 in dist_bsc2bsc")
         p_vec(p2, "p2 in dist_bsc2bsc")
         print(f"dist_bsc2bsc: trivial result, distance={d2:.3f} mm")
-    return p1
+    return p1, p2
 
 
 # Example usage:
@@ -260,39 +261,20 @@ def get_bspline_plane_intersection_new(
         plane_origin: "App.Vector",
         plane_normal: "App.Vector") -> "list[App.Vector]":
     """Intersect a BSplineCurve with an infinite plane; return intersection points as Vectors."""
-    printouts_on = False
-    if(printouts_on):
-        print(f"++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++")
     plane = Part.Plane(plane_origin, plane_normal)
-    points = bspline_obj.intersect(plane)
-    actual_points = []
-    #print(f"points type: {type(points)}")
-    #print(f"point[0] type: {type(points[0])}")
-    #print(f"points {points}")a
-    # Returned, I think, a list of lists of app.vectors
-    # to account for intersections that are points or lines
-    # we only expect points so far
-    if points:
-        top_level = points[0]
-        if(printouts_on):
-            print("Points is True")
-        if isinstance(top_level, list):
-            actual_points = top_level 
-            if(printouts_on): 
-                print("points[0] is a List is true, actual_points = points[0]")
-    else:
-        if(printouts_on):
-            print("Points is False")
-        actual_points= points
-    point_vecs =[App.Vector(p.X, p.Y, p.Z) for p in actual_points]
-    if(printouts_on): 
-        for v in point_vecs: 
-            p_vec(v,"point_vecs")
-    if(printouts_on): 
-        p_vec(point_vecs[0],"point_vecs[0]") 
-        p_vec(point_vecs[1],"point_vecs[1]")
-    
-    return point_vecs
+    result = bspline_obj.intersect(plane)
+    print(f"intersect() result type={type(result).__name__}  len={len(result)}", end="")
+    if result:
+        print(f"  result[0] type={type(result[0]).__name__}", end="")
+        if result[0] and isinstance(result[0], list):
+            print(f"  result[0][0] type={type(result[0][0]).__name__}", end="")
+    print()
+    if not result:
+        return []
+    # intersect() return shape varies: ([Part.Point,...], [float,...]) nested tuple/list,
+    # or a flat [Part.Point,...].  Unwrap one level if the first element is itself a list.
+    candidates = result[0] if isinstance(result[0], list) else result
+    return [App.Vector(p.X, p.Y, p.Z) for p in candidates if hasattr(p, 'X')]
 
 
 

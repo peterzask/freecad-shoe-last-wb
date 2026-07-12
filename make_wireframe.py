@@ -35,7 +35,7 @@ crisp_sole = False #xs_base.CRISP_SOLE #  should always be False, 0 width wirefr
 #rows = [list(xs_base.get_heel_end_row(crisp_sole=xs_base.CRISP_SOLE))]  # heel end cap (global 3D)
 rows = [list(xs_base.get_heel_end_row(crisp_sole))]       # heel end cap
 pl_hn = xs_base.xs_heel_near_placement * hf.yz_xy_place
-rows.append([pl_hn.multVec(pv) for pv in xs_heel_near.xs_heel_near.ctrl.control_points(crisp_sole)])
+rows.append(xs_heel_near.xs_heel_near.row_world(pl_hn, crisp_sole))
 for xs, placement in xs_list:
     pl = placement * hf.yz_xy_place
     #rows.append([pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=xs_base.CRISP_SOLE)])

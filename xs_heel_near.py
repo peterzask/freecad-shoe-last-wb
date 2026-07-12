@@ -29,24 +29,43 @@ class xs_heel_near_lens_c:
                        insole_dwg:  last_insole.insole_layout,
                        profile_dwg: last_profile.draw_profile_c):
         self.HC  = xs_base.xs_heel_near.HC
-
-        # HT1/HT2: shift bc_3d_heel 5mm forward along H→D, then find the nearest point to
-        # medial_highwater_bc.  bc_3d_heel alone lies entirely behind xs_heel_near's plane;
-        # the 5mm shift (from sandbox-3 experiment) brings C5 into range of the highwater locus.
-        _origin = xs_base.xs_heel_near_placement.Base
-        _p_uHD = (last_insole.insole_dwg.D - xs_base.g_H).normalize()
-        _heel_shifted = xs_base.bc_3d_heel.copy()
-        _heel_shifted.translate(_p_uHD * 5.0)
-        _bc_hw_med = control_curves._bc_to_3d(control_curves.medial_highwater_bc)
-        _p1, _ = hf.dist_bsc2bsc(_heel_shifted, _bc_hw_med)
-        _ht = (_p1 - _origin).dot(xs_base.gvec_uHC5)
-        print(f"xs_heel_near HT1={_ht:.2f} (shifted heel×hw_med)")
-        self.HT1 = _ht
-        self.HT2 = _ht
         self.CC1 = xs_base.xs_heel_near.CC1
         self.CC2 = xs_base.xs_heel_near.CC2
         self.HC1 = xs_base.xs_heel_near.HC1
         self.HC2 = xs_base.xs_heel_near.HC2
+
+        # T ring: axial position + height from bc_3d_heel at t=0.30 (same t as
+        # xs_heel_near_row in xs_base), lateral from last outline at that x.
+        # T1/T2 sit OFF the xs_heel_near plane, tracing the heel cup arc.
+        # Axial position (x): bc_3d_heel at t=0.30 places T off-plane toward the heel cup.
+        # Height (z): highwater level from xs_heights — bc_3d_heel.value(0.30).z is
+        #             near-crown height (~55mm), far above the T ring's correct height.
+        # Lateral (y): last outline at that x.
+        _p_m = xs_base.bc_3d_heel.value(0.30)  # x=axial position, z ignored for T height
+        _HT  = xs_base.xs_heel_near.HT1
+        # World z at highwater height: origin + HT1 along gvec_uHC5.
+        _z_hw = (xs_base.xs_heel_near_placement.Base
+                 + xs_base.gvec_uHC5 * _HT).z
+        print(f"xs_heel_near bc_3d_heel.value(0.30).x={_p_m.x:.2f}  HT1={_HT:.2f}  z_hw={_z_hw:.2f}")
+        try:
+            _TT1 = hf.get_bspline_plane_intersection_new(
+                control_curves.bc_medial_last_outline,
+                App.Vector(_p_m.x, 0, 0), hf.nX)[0].y
+        except IndexError:
+            print(f"xs_heel_near T1 outline fallback at x={_p_m.x:.2f}")
+            _TT1 = xs_base.xs_heel_near.HH1
+        try:
+            _TT2 = hf.get_bspline_plane_intersection_new(
+                control_curves.bc_lateral_last_outline,
+                App.Vector(_p_m.x, 0, 0), hf.nX)[0].y
+        except IndexError:
+            print(f"xs_heel_near T2 outline fallback at x={_p_m.x:.2f}")
+            _TT2 = xs_base.xs_heel_near.HH2
+        # World-space T positions — x off-plane (on heel cup), y from outline, z at highwater.
+        # row_world() injects these directly; pl_hn.multVec() is NOT applied to them.
+        self.T1_world = App.Vector(_p_m.x, _TT1, _z_hw)
+        self.T2_world = App.Vector(_p_m.x, _TT2, _z_hw)
+        print(f"xs_heel_near T1_world={self.T1_world}  T2_world={self.T2_world}")
 
     def build(self):
         sc    = xs_base.xs_heel_near
@@ -56,10 +75,11 @@ class xs_heel_near_lens_c:
         self.H1 = App.Vector( sc.HH1, _H_y,  0)
         self.H2 = App.Vector( sc.HH2, _H_y,  0)
         self.H3 = App.Vector(0,       _H3_y, 0)
-        self.T1 = App.Vector( sc.TT1, self.HT1, 0)
-        self.T2 = App.Vector( sc.TT2, self.HT2, 0)
+        # T1/T2 for sketch display only (in-plane); actual surface positions are T1_world/T2_world.
+        self.T1 = App.Vector( sc.TT1, sc.HT1, 0)
+        self.T2 = App.Vector( sc.TT2, sc.HT2, 0)
         t       = sc.TT1 / (sc.TT1 - sc.TT2)
-        self.T  = App.Vector(0, self.HT1 + t * (self.HT2 - self.HT1), 0)
+        self.T  = App.Vector(0, sc.HT1 + t * (sc.HT2 - sc.HT1), 0)
         self.C  = App.Vector(0,         self.HC,  0)
         self.C1 = App.Vector( self.CC1, self.HC1, 0)
         self.C2 = App.Vector(-self.CC2, self.HC2, 0)
@@ -68,6 +88,15 @@ class xs_heel_near_lens_c:
             T=self.T,   T1=self.T1, T2=self.T2,
             C=self.C,   C1=self.C1, C2=self.C2)
         self.control_points = self.ctrl.control_points()
+
+    def row_world(self, pl_hn, crisp_sole=False):
+        """Row in world space. T1/T2 are world positions off the xs_heel_near plane;
+        all other points are transformed from local sketch space by pl_hn."""
+        pts = [pl_hn.multVec(pv) for pv in self.ctrl.control_points(crisp_sole)]
+        t1_idx, t2_idx = (4, 8) if crisp_sole else (3, 7)
+        pts[t1_idx] = self.T1_world
+        pts[t2_idx] = self.T2_world
+        return pts
 
     def draw_circles(self, sketch):
         for pt in [self.H, self.H1, self.H2, self.H3,

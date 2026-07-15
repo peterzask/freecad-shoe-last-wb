@@ -109,6 +109,8 @@ lateral_crown_locus = None
 xs_heights = {
 }  # keyed 0–8; {'g_T1','g_T2','HT1','HT2','HC','HC1','HC2'} per section
 
+insole_vecs = None   # SimpleNamespace of insole drawing vectors; populated in build()
+profile_vecs = None  # SimpleNamespace of profile vectors in world 3D; populated in build()
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -240,11 +242,34 @@ def build():
     global heel_bc
     global medial_hw_locus, lateral_hw_locus, center_crown_locus, medial_crown_locus, lateral_crown_locus
     global xs_heights
+    global insole_vecs, profile_vecs
 
     pd = last_profile.profile_dwg
     idw = last_insole.insole_dwg
     #sp_p    = sp.shape_params
     ft_meas = last_insole.ft_measurements
+
+    import types
+    _pl = last_profile.sketch_profile.Placement
+    _g_H   = _pl.multVec(pd.H)
+    _g_J   = _pl.multVec(pd.J)
+    _g_C5  = _pl.multVec(pd.C5)
+    _g_H2  = _pl.multVec(pd.H2)
+    _g_J_insole = App.Vector(_g_J.x, _g_J.y, 0)
+    _uJA = (idw.A - _g_J_insole).normalize()
+    _h2_reach = hf.scalar_proj_a_onto_b(_g_H2, _g_H, _g_J)
+    insole_vecs = types.SimpleNamespace(
+        A=idw.A, B=idw.B, C=idw.C, D=idw.D,
+        H1=idw.H1, H2=idw.H2, J1=idw.J1, J2=idw.J2, K=idw.K,
+    )
+    profile_vecs = types.SimpleNamespace(
+        H=_g_H, J=_g_J, C5=_g_C5, H2=_g_H2,
+        uHC5=(_g_C5 - _g_H).normalize(),
+        uJH=(_g_H - _g_J).normalize(),
+        A0=_g_J_insole + _uJA * _h2_reach,
+    )
+    _old_A0 = idw.A + App.Vector(-8.3, 0, 0)
+    print(f"profile_vecs.A0={profile_vecs.A0}  empirical was: {_old_A0}")
 
     sections = _section_geometry()
     xs8_x = sections[-1][1].x
@@ -253,11 +278,11 @@ def build():
     # Rows 1 & 2: T1/T2 — last outline (XY) + highwater profile (XZ)
     # =========================================================================
     # XY: last outline medial / lateral (T1/T2 Y-width loci)
-    A0 = idw.A + App.Vector(-8.3, 0, 0)                 #z++ risky place to change A0
+    A0 = profile_vecs.A0
     #lC2   = idw.C  + App.Vector(0,  5 + 17, 0)
     #lC3   = idw.C  + App.Vector(0, -5 - 17, 0)
-    lC2 = idw.A + App.Vector(-8.3, 5 + 17, 0)     #z++
-    lC3 = idw.A + App.Vector(-8.3, -5 - 17, 0)
+    lC2 = profile_vecs.A0 + App.Vector(0, 5 + 17, 0)
+    lC3 = profile_vecs.A0 + App.Vector(0, -5 - 17, 0)
     H1_t = idw.H1 + App.Vector(0, 2, 0)
     H2_t = idw.H2 + App.Vector(0, -2, 0)
     #B1_t  = idw.B1 + App.Vector(1,  1, 0)
@@ -338,9 +363,8 @@ def build():
     #Row 2 Input curve
     class _lat:
         _dw = last_insole.insole_dwg
-        #A0 = _dw.A  
-        A0 = _dw.A  + App.Vector(-8.3,0,0)
-        lC3 = _dw.A + App.Vector(-8.3, -5 - 17, 0)
+        A0 = profile_vecs.A0
+        lC3 = profile_vecs.A0 + App.Vector(0, -5 - 17, 0)
         H2_t = _dw.H2 + App.Vector(0, -2, 0)
         #B2_t  = _dw.B2 + App.Vector(1, -1, 0) old
         B2_t = _dw.B2 + App.Vector(9, -7, 0)

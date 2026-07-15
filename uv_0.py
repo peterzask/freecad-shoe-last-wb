@@ -8,6 +8,7 @@ import last_insole
 import last_profile
 import inspect
 import xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9
+import xs_heel_near
 import xs_base
 import control_curves
 #import analyze_uv_matrix as analyz
@@ -21,6 +22,7 @@ if True:
     importlib.reload(xs_base)         # xs_base.build() calls control_curves.build() first
     for m in [xs_0, xs_1, xs_2, xs_3, xs_4, xs_5, xs_6, xs_7, xs_8, xs_9]:
         importlib.reload(m)
+    importlib.reload(xs_heel_near)
 
 print(f"+++++++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++++++++++")
 
@@ -87,7 +89,9 @@ def _apply_girth_scale(pts, h, c_scale, t_scale, crisp):
 # Transform each section's control points from sketch-local to global 3D
 # heel_end_row prepended so degree-2 u smooths through the heel — no separate heel cap needed
 _sec_names = ['xs_0','xs_1','xs_2','xs_3','xs_4','xs_5','xs_6','xs_7','xs_8','xs_9']
-rows = [list(xs_base.get_heel_end_row(crisp_sole=True ))] #xs_base.CRISP_SOLE or True ))]
+rows = [list(xs_base.get_heel_end_row(crisp_sole=True))]
+pl_hn = xs_base.xs_heel_near_placement * hf.yz_xy_place
+rows.append(xs_heel_near.xs_heel_near.row_world(pl_hn, crisp_sole=True))
 for (xs, placement), xs_sc, sec_name in zip(xs_list, xs_scalars_list, _sec_names):
     pl = placement * hf.yz_xy_place
     pts = [pl.multVec(pv) for pv in xs.ctrl.control_points(crisp_sole=True)] #xs_base.CRISP_SOLE)]
@@ -102,7 +106,7 @@ for (xs, placement), xs_sc, sec_name in zip(xs_list, xs_scalars_list, _sec_names
 
 rows.append(list(xs_base.xs_toe_end_row))
 
-u_count = len(rows)    # 12: heel_end + 10 sections + toe_end
+u_count = len(rows)    # 13: heel_end + xs_heel_near + 10 sections + toe_end
 v_count = len(rows[0]) # 9 (or 10 with CRISP_SOLE): H2 H3 [H1 H1] T1 C1 C C2 T2 H2
 #print(f"u_count={u_count}, v_count={v_count}")
 
@@ -130,10 +134,10 @@ for u in range(1, u_count):
 uks_raw = [k / uks_raw[-1] for k in uks_raw]
 uks, u_mults = _hartley_judd_knots(uks_raw, degree)
 
-# Chord-length parameterization in v around the xs_3 cross-section (index 4 with heel row prepended)
+# Chord-length parameterization in v around the xs_3 cross-section (index 5: heel_end + xs_heel_near + xs_0..xs_2)
 vks_raw = [0.0]
 for v in range(1, v_count):
-    vks_raw.append(vks_raw[-1] + (rows[4][v] - rows[4][v-1]).Length)
+    vks_raw.append(vks_raw[-1] + (rows[5][v] - rows[5][v-1]).Length)
 vks_raw = [k / vks_raw[-1] for k in vks_raw]
 vks, v_mults = _hartley_judd_knots(vks_raw, degree)
 
@@ -208,9 +212,9 @@ if False:
     # degree-2 periodic BSpline matches the NURBS surface v-direction degree,
     # so arc length closely approximates the actual surface girth at each section.
     _girth_ring_data = [
-        ("xs_3  instep", rows[4],  last_insole.ft_measurements.instep),
-        ("xs_4  waist",  rows[5],  last_insole.ft_measurements.waist),
-        ("xs_5  joint",  rows[6],  last_insole.ft_measurements.joint),
+        ("xs_3  instep", rows[5],  last_insole.ft_measurements.instep),
+        ("xs_4  waist",  rows[6],  last_insole.ft_measurements.waist),
+        ("xs_5  joint",  rows[7],  last_insole.ft_measurements.joint),
     ]
     _girth_shapes = []
     print("\n=== Girth check (deg-2 BSpline, post-scale) ===")

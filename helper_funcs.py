@@ -225,7 +225,7 @@ def intersect_lines(p0: App.Vector, p1: App.Vector, p2: App.Vector, p3: App.Vect
     return PtA,PtB
 
 
-def scaler_proj_a_onto_b(a: App.Vector, b: App.Vector, ref: App.Vector) -> float:
+def scalar_proj_a_onto_b(a: App.Vector, b: App.Vector, ref: App.Vector) -> float:
     """Scalar projection of (a-ref) onto unit(b-ref)."""
     A = a - ref
     B = (b - ref).normalize()

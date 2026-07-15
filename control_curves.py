@@ -268,9 +268,6 @@ def build():
         uJH=(_g_H - _g_J).normalize(),
         A0=_g_J_insole + _uJA * _h2_reach,
     )
-    _old_A0 = idw.A + App.Vector(-8.3, 0, 0)
-    print(f"profile_vecs.A0={profile_vecs.A0}  empirical was: {_old_A0}")
-
     sections = _section_geometry()
     xs8_x = sections[-1][1].x
 

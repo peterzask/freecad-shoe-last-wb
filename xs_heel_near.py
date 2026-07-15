@@ -49,14 +49,14 @@ class xs_heel_near_lens_c:
         print(f"xs_heel_near bc_3d_heel.value(0.30).x={_p_m.x:.2f}  HT1={_HT:.2f}  z_hw={_z_hw:.2f}")
         try:
             _TT1 = hf.get_bspline_plane_intersection_new(
-                control_curves.bc_medial_last_outline,
+                control_curves.T1_insole,
                 App.Vector(_p_m.x, 0, 0), hf.nX)[0].y
         except IndexError:
             print(f"xs_heel_near T1 outline fallback at x={_p_m.x:.2f}")
             _TT1 = xs_base.xs_heel_near.HH1
         try:
             _TT2 = hf.get_bspline_plane_intersection_new(
-                control_curves.bc_lateral_last_outline,
+                control_curves.T2_insole,
                 App.Vector(_p_m.x, 0, 0), hf.nX)[0].y
         except IndexError:
             print(f"xs_heel_near T2 outline fallback at x={_p_m.x:.2f}")

@@ -37,13 +37,13 @@ class xs_0_lens_c:
 
         # HC from top_bc/xs_0 plane intersection in global 3D
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in control_curves.front_top_bc.getPoles()]
+                    for p in control_curves.toe_profile.getPoles()]
         top_bc_3d = Part.BSplineCurve()
         top_bc_3d.buildFromPolesMultsKnots(
             poles_3d,
-            control_curves.front_top_bc.getMultiplicities(),
-            control_curves.front_top_bc.getKnots(),
-            False, control_curves.front_top_bc.Degree)
+            control_curves.toe_profile.getMultiplicities(),
+            control_curves.toe_profile.getKnots(),
+            False, control_curves.toe_profile.Degree)
         g_C_pts = hf.get_bspline_plane_intersection_new(
             top_bc_3d,
             xs_base.xs_0_placement.Base,
@@ -61,13 +61,13 @@ class xs_0_lens_c:
 
         # HT1/HT2 from medial/lateral highwater BSpline intersections
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in control_curves.medial_highwater_bc.getPoles()]
+                    for p in control_curves.T1_profile.getPoles()]
         med_hw_3d = Part.BSplineCurve()
         med_hw_3d.buildFromPolesMultsKnots(
             poles_3d,
-            control_curves.medial_highwater_bc.getMultiplicities(),
-            control_curves.medial_highwater_bc.getKnots(),
-            False, control_curves.medial_highwater_bc.Degree)
+            control_curves.T1_profile.getMultiplicities(),
+            control_curves.T1_profile.getKnots(),
+            False, control_curves.T1_profile.Degree)
         g_T1_pts = hf.get_bspline_plane_intersection_new(
             med_hw_3d,
             xs_base.xs_0_placement.Base,
@@ -77,13 +77,13 @@ class xs_0_lens_c:
         self.HT1 = (g_T1 - xs_base.xs_0_placement.Base).dot(xs_base.gvec_uHC5)
 
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in control_curves.lateral_highwater_bc.getPoles()]
+                    for p in control_curves.T2_profile.getPoles()]
         lat_hw_3d = Part.BSplineCurve()
         lat_hw_3d.buildFromPolesMultsKnots(
             poles_3d,
-            control_curves.lateral_highwater_bc.getMultiplicities(),
-            control_curves.lateral_highwater_bc.getKnots(),
-            False, control_curves.lateral_highwater_bc.Degree)
+            control_curves.T2_profile.getMultiplicities(),
+            control_curves.T2_profile.getKnots(),
+            False, control_curves.T2_profile.Degree)
         g_T2_pts = hf.get_bspline_plane_intersection_new(
             lat_hw_3d,
             xs_base.xs_0_placement.Base,
@@ -158,6 +158,6 @@ if __name__ == "__main__":
 #        hf.p_vec(tn,"tn")
 #        hf.p_vec(td,"td")
 #        print(f"tn({tn}), td({td})")
-#        profile_point = hf.get_bspline_plane_intersection_new(profile_dwg.bottom_bc,App.Vector(d,0,0),hf.nX)
+#        profile_point = hf.get_bspline_plane_intersection_new(profile_dwg.H_profile,App.Vector(d,0,0),hf.nX)
 #        hf.p_vec(profile_point[0],"profile_point")
     #end check alignment

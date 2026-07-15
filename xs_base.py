@@ -101,7 +101,7 @@ class xs_scalars_c:
 
 # Cross-section control point naming follows George Koleff's book.
 # Ring order (lateral→sole→medial, consistent v-direction for NURBS):
-#     C1 C C2   — C on front_top_bc; C1/C2 on crown contour curves
+#     C1 C C2   — C on toe_profile; C1/C2 on crown contour curves
 #     T1 T T2   — T1/T2 on medial/lateral highwater curves
 #     H1 H H2
 #        H3     — sole low point touches ground at J
@@ -170,12 +170,12 @@ def compute_xs_scalars(placement: App.Placement,
         hf.get_bspline_plane_intersection_new(bc_3d_bottom, origin, normal)[0])
     H = H3 + local_up * 3.0
     HH1 = hf.get_bspline_plane_intersection_new(
-        control_curves.insole_bc_medial, App.Vector(d, 0, 0),
+        control_curves.H1_insole, App.Vector(d, 0, 0),
         hf.nX)[0].y  #[ H.x , not d] note: differences are ~ 1mm
     #[ nX is approximation
     print(f" xs_indx({xs_idx}) d({d}) H.x({H.x})")
     HH2 = hf.get_bspline_plane_intersection_new(
-        control_curves.insole_bc_lateral, App.Vector(d, 0, 0),
+        control_curves.H2_insole, App.Vector(d, 0, 0),
         hf.nX)[0].y  #[ H.x, not d] note these are small differences
     #[ nX is approximation, clearly wrong at xs 0 and 8
     H1 = App.Vector(H.x, HH1, H.z)
@@ -188,14 +188,14 @@ def compute_xs_scalars(placement: App.Placement,
     _x_clamp = min(d, _xs8_x)
     try:
         TT1 = hf.get_bspline_plane_intersection_new(
-            control_curves.bc_medial_last_outline,
+            control_curves.T1_insole,
             App.Vector(_x_clamp, 0, 0), hf.nX)[0].y
     except IndexError:
         print(f"Error: TT1 fallback to HH1={HH1:.2f} at x={_x_clamp:.2f}")
         TT1 = HH1
     try:
         TT2 = hf.get_bspline_plane_intersection_new(
-            control_curves.bc_lateral_last_outline,
+            control_curves.T2_insole,
             App.Vector(_x_clamp, 0, 0), hf.nX)[0].y
     except IndexError:
         print(f"Error: TT2 fallback to HH2={HH2:.2f} at x={_x_clamp:.2f}")
@@ -205,7 +205,7 @@ def compute_xs_scalars(placement: App.Placement,
     hf.p_vec(App.Vector(TT2, HT2, 0), "TT2 HT2")
     try:
         CC1 = hf.get_bspline_plane_intersection_new(
-            control_curves.C1_insole_medial, App.Vector(_x_clamp, 0, 0),
+            control_curves.C1_insole, App.Vector(_x_clamp, 0, 0),
             hf.nX)[0].y
     except IndexError:
         CC1 = 0.0
@@ -213,7 +213,7 @@ def compute_xs_scalars(placement: App.Placement,
     try:
         CC2 = abs(
             hf.get_bspline_plane_intersection_new(
-                control_curves.C2_insole_lateral, App.Vector(_x_clamp, 0, 0),
+                control_curves.C2_insole, App.Vector(_x_clamp, 0, 0),
                 hf.nX)[0].y)
     except IndexError:
         CC2 = 0.0
@@ -259,7 +259,7 @@ def get_xs_heel_near_row(crisp_sole=False):
 def _insole_medial_y_at_spine_d(d: float) -> float:
     pt = g_J + gvec_uJB1 * d
     hits = hf.get_bspline_plane_intersection_new(
-        control_curves.insole_bc_medial, App.Vector(pt.x, 0, 0), hf.nX)
+        control_curves.H1_insole, App.Vector(pt.x, 0, 0), hf.nX)
     return hits[0].y if hits else 0.0
 
 
@@ -273,7 +273,7 @@ def insolePoint_from_profilePoint(ptV: App.Vector) -> App.Vector:
 
 
 # --- Build ---
-# add, C1 C2 curves in last_insole, and from last_profileC1_insole_medial
+# add, C1 C2 curves in last_insole, and from last_profileC1_insole
 def build():
     global gvec_uHB, gvec_uHC5
     global g_H, g_J, g_C5, g_H2, g_H2_mod_heel, g_B1, g_B2, g_uHJ, d_HJ, g_K
@@ -418,13 +418,13 @@ def build():
     # --- 3D BSplines ---
     bc_3d_edge_list = []
 
-    bc_3d_heel = bspline_to_3dyz_from_2dxy(control_curves.heel_bc)
+    bc_3d_heel = bspline_to_3dyz_from_2dxy(control_curves.heel_profile)
     bc_3d_edge_list.append(bc_3d_heel)
 
-    bc_3d_bottom = bspline_to_3dyz_from_2dxy(control_curves.bottom_bc)
+    bc_3d_bottom = bspline_to_3dyz_from_2dxy(control_curves.H_profile)
     bc_3d_edge_list.append(bc_3d_bottom)
 
-    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.front_top_bc)
+    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.toe_profile)
     bc_3d_edge_list.append(bc_3d_front_top.toShape())
 
     # --- Scalar samples for each section (xs_heights[i] from control_curves) ---
@@ -457,7 +457,7 @@ def build():
     ]
 
     # --- Heel near row: bc_3d_heel sampled at intermediate t values ---
-    # Bows to heel_bc shape rather than being a parallel slice like xs_0.
+    # Bows to heel_profile shape rather than being a parallel slice like xs_0.
     _t_c, _t_m, _t_h = 0.15, 0.30, 0.92
     _p_c = bc_3d_heel.value(_t_c)
     _p_m = bc_3d_heel.value(_t_m)
@@ -493,7 +493,7 @@ def build():
         f"xs_toe_end at d={_d_lo:.2f} mm from J  (insole half-width ≈ {_insole_medial_y_at_spine_d(_d_lo):.2f} mm)"
     )
 
-    # --- Toe end cap row: geometry-driven from front_top_bc intersections ---
+    # --- Toe end cap row: geometry-driven from toe_profile intersections ---
     def _prof_to_3d(p):
         """Profile sketch local point → 3D world."""
         return last_profile.sketch_profile.Placement.multVec(
@@ -502,12 +502,12 @@ def build():
     _toe_cap_spread = 0.1
     _toe_cap_lat = App.Vector(0, _toe_cap_spread, 0)
 
-    _hw_isects = control_curves.front_top_bc.intersect(
-        control_curves.medial_highwater_bc)
-    _c1_isects = control_curves.front_top_bc.intersect(
-        control_curves.C1_profile_bc)
-    _c2_isects = control_curves.front_top_bc.intersect(
-        control_curves.C2_profile_bc)
+    _hw_isects = control_curves.toe_profile.intersect(
+        control_curves.T1_profile)
+    _c1_isects = control_curves.toe_profile.intersect(
+        control_curves.C1_profile)
+    _c2_isects = control_curves.toe_profile.intersect(
+        control_curves.C2_profile)
 
     _hw3  = _prof_to_3d(_hw_isects[0])
     _c1_3 = _prof_to_3d(_c1_isects[1])

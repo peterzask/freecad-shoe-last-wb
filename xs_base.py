@@ -101,7 +101,7 @@ class xs_scalars_c:
 
 # Cross-section control point naming follows George Koleff's book.
 # Ring order (lateral→sole→medial, consistent v-direction for NURBS):
-#     C1 C C2   — C on toe_profile; C1/C2 on crown contour curves
+#     C1 C C2   — C on top_profile; C1/C2 on crown contour curves
 #     T1 T T2   — T1/T2 on medial/lateral highwater curves
 #     H1 H H2
 #        H3     — sole low point touches ground at J
@@ -424,7 +424,7 @@ def build():
     bc_3d_bottom = bspline_to_3dyz_from_2dxy(control_curves.H_profile)
     bc_3d_edge_list.append(bc_3d_bottom)
 
-    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.toe_profile)
+    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.top_profile)
     bc_3d_edge_list.append(bc_3d_front_top.toShape())
 
     # --- Scalar samples for each section (xs_heights[i] from control_curves) ---
@@ -493,7 +493,7 @@ def build():
         f"xs_toe_end at d={_d_lo:.2f} mm from J  (insole half-width ≈ {_insole_medial_y_at_spine_d(_d_lo):.2f} mm)"
     )
 
-    # --- Toe end cap row: geometry-driven from toe_profile intersections ---
+    # --- Toe end cap row: geometry-driven from top_profile intersections ---
     def _prof_to_3d(p):
         """Profile sketch local point → 3D world."""
         return last_profile.sketch_profile.Placement.multVec(
@@ -502,11 +502,11 @@ def build():
     _toe_cap_spread = 0.1
     _toe_cap_lat = App.Vector(0, _toe_cap_spread, 0)
 
-    _hw_isects = control_curves.toe_profile.intersect(
+    _hw_isects = control_curves.top_profile.intersect(
         control_curves.T1_profile)
-    _c1_isects = control_curves.toe_profile.intersect(
+    _c1_isects = control_curves.top_profile.intersect(
         control_curves.C1_profile)
-    _c2_isects = control_curves.toe_profile.intersect(
+    _c2_isects = control_curves.top_profile.intersect(
         control_curves.C2_profile)
 
     _hw3  = _prof_to_3d(_hw_isects[0])

@@ -55,7 +55,7 @@ nY = App.Vector(0.0,1.0,0.0)
 nZ = App.Vector(0.0,0.0,1.0)  
 
 
-print(f"++++++++++Line({inspect.currentframe().f_lineno}) File:({__file__})+++++++++++")
+print(f"Line({inspect.currentframe().f_lineno})\n" f" File:({__file__})")
 def rotate_vector(A: App.Vector, degrees:float):
     theta = math.pi*degrees/180.0
     ct = math.cos(theta)
@@ -263,13 +263,16 @@ def get_bspline_plane_intersection_new(
     """Intersect a BSplineCurve with an infinite plane; return intersection points as Vectors."""
     plane = Part.Plane(plane_origin, plane_normal)
     result = bspline_obj.intersect(plane)
-    print(f"intersect() result type={type(result).__name__}  len={len(result)}", end="")
+    #print(f"intersect() result type={type(result).__name__}  len={len(result)}", end="")
+    """
     if result:
         print(f"  result[0] type={type(result[0]).__name__}", end="")
         if result[0] and isinstance(result[0], list):
             print(f"  result[0][0] type={type(result[0][0]).__name__}", end="")
     print()
+    """
     if not result:
+        print(f"No result in get_bspline_plane_intersection_new")
         return []
     # intersect() return shape varies: ([Part.Point,...], [float,...]) nested tuple/list,
     # or a flat [Part.Point,...].  Unwrap one level if the first element is itself a list.

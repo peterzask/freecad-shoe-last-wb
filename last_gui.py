@@ -129,7 +129,7 @@ class MacroLauncher(QtGui.QWidget):
     def run_xs_3(self):
         import xs_3
         importlib.reload(xs_3)
-        refresh_view()
+        #refresh_view()
         print("xs_3 rebuilt.")
 
     def run_xs_4(self):

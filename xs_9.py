@@ -28,7 +28,7 @@ class xs_9_lens_c:
     def __init__(self, p_lens:     last_profile.profile_lengths_c,
                        insole_dwg:  last_insole.insole_layout,
                        profile_dwg: last_profile.draw_profile_c):
-        # HC from toe_profile/xs_9 plane intersection
+        # HC from top_profile/xs_9 plane intersection
         g_C = hf.get_bspline_plane_intersection_new(
             xs_base.bc_3d_front_top,
             xs_base.xs_9_placement.Base, xs_base.gvec_uJB1)[0]

@@ -134,14 +134,15 @@ xs_3.build()
 xs_3.draw_circles(sketch_xs3)
 xs_3.draw_lines(sketch_xs3)
 
+
 plen, plen_in = xs_3.perimeter_length()
 print(f"xs_3 perimeter = {plen:.1f} mm  ({plen_in:.3f} in)")
 
 sketch_xs3.Placement = xs_base.xs_3_placement * hf.yz_xy_place
 
-view = FreeCADGui.ActiveDocument.ActiveView
-view.fitAll()
-view.viewFront()
+#view = FreeCADGui.ActiveDocument.ActiveView
+#view.fitAll()
+#view.viewFront()
 doc.recompute()
 #checking
 hf.p_vec(xs_3.T1,"xs_3.T1")
@@ -154,7 +155,6 @@ hf.p_vec(xs_3.T2,"xs_3.T2")
 hf.print_4x4_matrix(sketch_xs3.Placement.Matrix,"xs3_placement")
 #sketch_xs3.addGeometry(Part.LineSegment(temp_xs_3_T1_3d,temp_xs_3_T1_xy_3d))
 #end checking
-
 print("\nThe end\n")
 
 def main():

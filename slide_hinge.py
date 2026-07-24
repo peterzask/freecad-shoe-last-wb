@@ -74,7 +74,8 @@ def make_stepped_cutter(rail_width):
     return cutting_surface
 
 # outer_cutter (6mm): open shell surface that slices the last — leaves a 6mm channel in HeelSection.
-place_cutter = App.Placement(V(25,0,20),App.Rotation(V(0,1,0),20))
+#place_cutter = App.Placement(V(25,0,20),App.Rotation(V(0,1,0),20))
+place_cutter = App.Placement(V(45,0,20),App.Rotation(V(0,1,0),10))
 outer_cutter = make_stepped_cutter(rail_width=6)
 outer_cutter.Placement = place_cutter
 if SHOW_CUTTERS: Part.show(outer_cutter)

@@ -91,9 +91,8 @@ print(f"xs_2 perimeter = {plen:.1f} mm  ({plen_in:.3f} in)")
 
 sketch_xs2.Placement = xs_base.xs_2_placement * hf.yz_xy_place
 
-view = FreeCADGui.ActiveDocument.ActiveView
-view.fitAll()
-view.viewFront()
+#view.fitAll()
+#view.viewFront()
 doc.recompute()
 
 hf.p_vec((-xs_2.H2+xs_2.H1),"H2-H1")

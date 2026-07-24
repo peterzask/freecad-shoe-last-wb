@@ -36,13 +36,13 @@ class xs_1_lens_c:
         # crown height: distance from section center to profile E, minus margin
         # HC from top_bc/xs_1 plane intersection in global 3D
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in control_curves.top_profile.getPoles()]
+                    for p in control_curves.C_profile.getPoles()]
         top_bc_3d = Part.BSplineCurve()
         top_bc_3d.buildFromPolesMultsKnots(
             poles_3d,
-            control_curves.top_profile.getMultiplicities(),
-            control_curves.top_profile.getKnots(),
-            False, control_curves.top_profile.Degree)
+            control_curves.C_profile.getMultiplicities(),
+            control_curves.C_profile.getKnots(),
+            False, control_curves.C_profile.Degree)
         g_C_pts = hf.get_bspline_plane_intersection_new(
             top_bc_3d,
             xs_base.xs_1_placement.Base,

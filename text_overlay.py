@@ -23,8 +23,8 @@ def main():
         print("text_overlay: groups exist — delete InsoleTextGroup and ProfileTextGroup to regenerate.")
         return
 
-    sketch_name = "sketch_insole_text"
-    doc, sketch_insole_text = hf.Doc_Sketch(None, sketch_name)
+    #sketch_name = "sketch_insole_text"
+    #doc, sketch_insole_text = hf.Doc_Sketch(None, sketch_name)
 
     #Assemble profile drawing point names and positions.
     p_cp_text_names = ["H","K1","K","Kb","J","B","B1","B2","J1","H1","E","C5E_intercept","C5","H2"]            

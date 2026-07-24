@@ -37,13 +37,13 @@ class xs_0_lens_c:
 
         # HC from top_bc/xs_0 plane intersection in global 3D
         poles_3d = [last_profile.sketch_profile.Placement.multVec(p)
-                    for p in control_curves.top_profile.getPoles()]
+                    for p in control_curves.C_profile.getPoles()]
         top_bc_3d = Part.BSplineCurve()
         top_bc_3d.buildFromPolesMultsKnots(
             poles_3d,
-            control_curves.top_profile.getMultiplicities(),
-            control_curves.top_profile.getKnots(),
-            False, control_curves.top_profile.Degree)
+            control_curves.C_profile.getMultiplicities(),
+            control_curves.C_profile.getKnots(),
+            False, control_curves.C_profile.Degree)
         g_C_pts = hf.get_bspline_plane_intersection_new(
             top_bc_3d,
             xs_base.xs_0_placement.Base,

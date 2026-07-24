@@ -424,7 +424,7 @@ def build():
     bc_3d_bottom = bspline_to_3dyz_from_2dxy(control_curves.H_profile)
     bc_3d_edge_list.append(bc_3d_bottom)
 
-    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.top_profile)
+    bc_3d_front_top = bspline_to_3dyz_from_2dxy(control_curves.C_profile)
     bc_3d_edge_list.append(bc_3d_front_top.toShape())
 
     # --- Scalar samples for each section (xs_heights[i] from control_curves) ---
@@ -502,16 +502,20 @@ def build():
     _toe_cap_spread = 0.1
     _toe_cap_lat = App.Vector(0, _toe_cap_spread, 0)
 
-    _hw_isects = control_curves.top_profile.intersect(
+    _hw_isects = control_curves.C_profile.intersect(
         control_curves.T1_profile)
-    _c1_isects = control_curves.top_profile.intersect(
+    _c1_isects = control_curves.C_profile.intersect(
         control_curves.C1_profile)
-    _c2_isects = control_curves.top_profile.intersect(
+    _c2_isects = control_curves.C_profile.intersect(
         control_curves.C2_profile)
 
     _hw3  = _prof_to_3d(_hw_isects[0])
-    _c1_3 = _prof_to_3d(_c1_isects[1])
-    _c2_3 = _prof_to_3d(_c2_isects[1])
+    # C_profile now spans further (former top_profile poles), so it shares
+    # its C5/E,E end with C1_profile/C2_profile — that produces extra
+    # near-duplicate crossings clustered at the shared end. The real,
+    # meaningful crossing is always the furthest one out, i.e. last in list.
+    _c1_3 = _prof_to_3d(_c1_isects[-1])
+    _c2_3 = _prof_to_3d(_c2_isects[-1])
     # C center: average of C1 and C2 intersections — keeps C between C1 and C2 in x,
     # preventing face inversions at the xs_9→toe_end transition.
     _c_3  = App.Vector((_c1_3.x + _c2_3.x) / 2, 0, (_c1_3.z + _c2_3.z) / 2)

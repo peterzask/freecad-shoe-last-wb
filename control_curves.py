@@ -16,31 +16,33 @@ doc, sketch_io = hf.Doc_Sketch(last_insole.doc, sketch_io_name)
 sketch_po_name = "sketch_profile_overlay"
 doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_po_name)
 
-# Pipeline: last_insole -> last_profile -> control_curves -> xs_base -> xs_0...xs_8 -> uv_0
-#
-# All BSpline (continuous) geometry is built here, organized by table row.
+# Pipeline: last_insole -> last_profile -> control_curves -> xs_base -> xs_0...xs_8 -> uv_0 -> girth_checks
+#                                                ^               ^                                   |
+#                                                |               |                                   |
+#                                                +---------------+-----------------------------<-----+
+# All BSpline (continuous) geometry is built here.
 # last_insole and last_profile supply only discrete geometry: points, lengths,
 # construction lines, and point-identifying circles.
 #
-# The last takes shape bottom-up:
-#   last insole -> last outline → profile bottom -> profile top → highwaters -> crowns
+# The last takes shape ebottom-up:
+#   last insole -> profile top → profile bottom -> plast outline → ighwaters -> crowns
 #
 # Each xs-plane point is located by intersecting one insole curve and one profile curve:
 #
 #   insole curve   + profile curve  →  xs-plane point
+#   (x-axis)         C_profile          C
 #   H1_insole        H_profile          H1
 #   H2_insole        H_profile          H2
 #   T1_insole        T1_profile         T1
 #   T2_insole        T2_profile         T2
-#   (x-axis)         C_profile          C
 #   C1_insole        C1_profile         C1
 #   C2_insole        C2_profile         C2
 #   heel_profile     (xz plane)         H, H2, C5
 #
 # Profile curves  (XZ plane → 3D via sketch_profile.Placement):
-#   H_profile, heel_profile, top_profile   — profile outline
+#   H_profile, heel_profile                — profile outline
 #   T1_profile, T2_profile                 — T1/T2 height loci
-#   C_profile                              — C crown top front
+#   C_profile                              — C crown/top front, heel-to-toe poles
 #   C1_profile, C2_profile                 — crown shoulder height loci
 #
 # Insole curves  (global XY, Z=0):
@@ -72,7 +74,6 @@ C2_insole = None
 H_profile    = None
 T1_profile   = None
 T2_profile   = None
-top_profile  = None   # Poor name, top shape is considered (J-B1)/2 forward, this is from E forward
 C_profile    = None
 C1_profile   = None
 C2_profile   = None
@@ -89,7 +90,7 @@ profile_vecs = None  # SimpleNamespace of profile vectors in world 3D; populated
 
 
 # All local-coordinate profile curves must be transformed to xz plane,
-#H_profile,T1_profile,T2_profile,top_profile,heel_profile (5 total)
+#H_profile,T1_profile,T2_profile,C_profile,heel_profile (5 total)
 def _bc_to_3d(bc_2d):
     """Bake sketch_profile's Placement into a copy of bc_2d's poles (local XZ -> global 3D)."""
     bc = bc_2d.copy()
@@ -196,7 +197,7 @@ def _section_geometry():
 
 
 # ---------------------------------------------------------------------------
-# Build — all BSpline geometry organized by table row
+# Build — all BSpline geometry 
 # ---------------------------------------------------------------------------
 
 
@@ -204,7 +205,7 @@ def build():
     global t_outline_bc
     global T1_insole, T2_insole
     global T1_profile, T2_profile
-    global H1_insole, H2_insole, H_profile, top_profile, C_profile
+    global H1_insole, H2_insole, H_profile, C_profile
     global C1_insole, C2_insole, C1_profile, C2_profile
     global heel_profile
     global xs_heights
@@ -243,38 +244,40 @@ def build():
     # class C_H — Koleff's primary profile: C/top locus, H/bottom, top outline, heel
     # =========================================================================
     class C_H:
-        global C_profile, H_profile, top_profile, heel_profile
-        # =========================================================================
-        # Row 5: C — profile top (XZ)
-        # =========================================================================
-
-        # XZ: profile top curve (C Z-height locus, heel-to-crown)
-
-        # XZ: C crown locus — heel to top, double pole at E for table-top crispness
+        global C_profile, H_profile, heel_profile
+        # XZ: profile top curve (C Z-height locus). Poles heel-to-toe (C5 -> B1) —
+        # was two separate curves (C_profile / top_profile); merged onto
+        # top_profile's pole values (the correct ones) under C_profile's name
+        # (matches the {pole}_{plane} naming convention), reversed to heel-to-toe.
         C_profile = Part.BSplineCurve()
         C_profile.buildFromPoles(
-            [pd.C5, pd.C5E_intercept, pd.E, pd.E, pd.J1, pd.J1, pd.B2], False, 2,
+            [
+                pd.C5,
+                pd.C5E_intercept,
+                pd.C5E_intercept,
+                pd.E,
+                pd.E,
+                pd.H1,
+                pd.J1 + App.Vector(0, -10, 0),
+                pd.B2 + App.Vector(5, 5, 0),
+                pd.B1
+            ],
+            False,
+            2,
             False)
-        #sandbox 5A start
-        #Row 5 Input curve. C crown locus poles in profile (XZ) plane.
-        if Draw_Sketch_C_profile := False:
-            #sketch_name = "sketch_profile_overlay"
-            #doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
+        sketch_po.addGeometry(C_profile)
+        if Draw_Sketch_C_profile := True:
             pole_list = C_profile.getPoles()
+            _name_list = [
+                "pd.C5", "pd.C5E_intercept", "pd.C5E_intercept", "pd.E", "pd.E",
+                "pd.H1", "pd.J1+(0,-10,0)", "pd.B2+(5,5,0)", "pd.B1"
+            ]
             for p in pole_list:
                 sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
-            _name_list = [
-                "pd.C5", "pd.C5E_intercept", "pd.E", "pd.E", "pd.J1", "pd.J1",
-                "pd.B2"
-            ]
-            k = 0
             print("**********C_profile Control Points*********************")
-            for p in pole_list:
+            for k, p in enumerate(pole_list):
                 hf.p_vec(p, f"{_name_list[k]}")
-                k += 1
-            sketch_po.addGeometry(C_profile)
-            #sketch_po.Placement = last_profile.sketch_profile.Placement
-        #sandbox 5A stop
+        #sandbox 5A/5B stop
         # XZ: profile bottom + front (H1/H2 Z-height and HC intersection source)
         H_profile = Part.BSplineCurve()
         H_profile.buildFromPoles(
@@ -298,48 +301,8 @@ def build():
             #sketch_po.addGeometry(H_profile)
             #sketch_po.Placement = last_profile.sketch_profile.Placement
         #sandbox 3A stop
-        top_profile = Part.BSplineCurve()
-        top_profile.buildFromPoles(
-            #[pd.B1, pd.B2 + App.Vector(-5, 0, 0),
-            [
-                pd.B1,
-                pd.B2 + App.Vector(
-                    5, 5, 0),  #changed back to last_proifle.py~12~ from line above
-                pd.J1 + App.Vector(0, -10, 0),
-                pd.H1,
-                pd.E,  #was (0,0,0),changed back to version last_profile_py~12~
-                pd.E,
-                pd.C5E_intercept,
-                pd.C5E_intercept,
-                pd.C5
-            ],
-            False,
-            2,
-            False)
-        sketch_po.addGeometry(top_profile)  # chng added
-        #sandbox 5B start
-        #Row 5 Input curve. Profile front+top curve poles (XZ).
-        if Draw_Sketch_top_profile := False:
-            #sketch_name = "sketch_profile_overlay"
-            #doc, sketch_po = hf.Doc_Sketch(last_insole.doc, sketch_name)
-            pole_list = [
-                pd.B1, pd.B2 + App.Vector(-5, 0, 0), pd.J1, pd.H1, pd.E, pd.E,
-                pd.C5E_intercept, pd.C5E_intercept, pd.C5
-            ]
-            for p in pole_list:
-                sketch_po.addGeometry(Part.Circle(p, hf.nZ, 2.0))
-            _name_list = [
-                "pd.B1", "pd.B2+(-5,0,0)", "pd.J1", "pd.H1", "pd.E", "pd.E",
-                "pd.C5E_intercept", "pd.C5E_intercept", "pd.C5"
-            ]
-            k = 0
-            print("**********top_profile Control Points*********************")
-            for p in pole_list:
-                hf.p_vec(p, f"{_name_list[k]}")
-                k += 1
-            #sketch_po.addGeometry(top_profile)
-            #sketch_po.Placement = last_profile.sketch_profile.Placement
-        #sandbox 5B stop
+        # top_profile merged into C_profile above (2026-07-24) — same pole
+        # values, reversed to heel-to-toe order, under the {pole}_{plane} name.
         # =========================================================================
         # Row 8: Heel — heel profile (XZ)
         # =========================================================================
@@ -776,7 +739,6 @@ def build():
         _show_compound([
             _bc_to_3d(heel_profile).toShape(),
             _bc_to_3d(H_profile).toShape(),
-            _bc_to_3d(top_profile).toShape(),
             _bc_to_3d(C_profile).toShape(),
             _bc_to_3d(T1_profile).toShape(),
             _bc_to_3d(T2_profile).toShape(),

@@ -234,7 +234,7 @@ def build():
         ankle       = _raw.ankle,
         toe_space   = _raw.toe_space,
     )
-    ft_measurements.print_()
+    #ft_measurements.print_()
 
     insole_lens = insole_len_c(ft_measurements)
     insole_dwg  = insole_layout()

@@ -103,4 +103,50 @@ def make_faces(wireframe_data):
 
 make_faces(rows)
 
+
+
+
 print("\nThe end\n")
+
+
+
+
+def wire_frame_from_bsplinesurface():
+    rows = _dedupe_v_columns(uv_0.rows, 5)
+    u_count = uv_0.nurb.NbUPoles
+    v_count = len(rows[0])
+    print(f"ucount {u_count} vcount {v_count}")
+    # Chord-length parameterization in u along the C-point spine (C is at v_count//2 + 1)
+    degree = 1
+    C_idx = v_count // 2 + 1
+    uks_raw = [0.0]
+    for u in range(1, u_count):
+        uks_raw.append(uks_raw[-1] + (rows[u][C_idx] - rows[u-1][C_idx]).Length)
+    # plain for-loop, not a comprehension — a comprehension's expression body
+    # runs in its own scope that skips right past the class body, so
+    # `uks_raw` (a class-body name) isn't visible to it and raises NameError.
+    _u_total = uks_raw[-1]
+    for i in range(len(uks_raw)):
+        uks_raw[i] = uks_raw[i] / _u_total
+    uks, u_mults = _hartley_judd_knots(uks_raw, degree)
+
+    # Chord-length parameterization in v around the xs_3 cross-section (index 5: heel_end + xs_heel_near + xs_0..xs_2)
+    vks_raw = [0.0]
+    for v in range(1, v_count):
+        vks_raw.append(vks_raw[-1] + (rows[5][v] - rows[5][v-1]).Length)
+    _v_total = vks_raw[-1]
+    for i in range(len(vks_raw)):
+        vks_raw[i] = vks_raw[i] / _v_total
+    vks, v_mults = _hartley_judd_knots(vks_raw, degree)
+    wire_frame = Part.BSplineSurface()
+    wire_frame.buildFromPolesMultsKnots(
+            rows,u_mults,v_mults,uks, vks,
+            uperiodic=False, vperiodic=False,
+            udegree=degree, vdegree=degree)
+    wire_frame_shape = wire_frame.toShape()
+    Part.show(wire_frame_shape)
+    doc.recompute()
+
+
+
+

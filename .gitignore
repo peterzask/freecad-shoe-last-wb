@@ -25,6 +25,9 @@ zTrash/
 system.cfg
 user.cfg
 
+# MCP server config (local paths, machine-specific)
+.mcp.json
+
 # Scratch / temp files
 temp.txt
 ana_out.txt

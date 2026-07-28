@@ -144,17 +144,6 @@ sketch_xs3.Placement = xs_base.xs_3_placement * hf.yz_xy_place
 #view.fitAll()
 #view.viewFront()
 doc.recompute()
-#checking
-hf.p_vec(xs_3.T1,"xs_3.T1")
-temp_xs_3_T1_3d = sketch_xs3.Placement.multVec(xs_3.T1)
-temp_xs_3_T1_xy_3d = temp_xs_3_T1_3d.scale(1.0,1.0,0.0)
-hf.p_vec(xs_3.T1,"xs_3.T1")
-hf.p_vec(temp_xs_3_T1_3d,"temp_xs_3_T1_3d")
-hf.p_vec(temp_xs_3_T1_3d-temp_xs_3_T1_xy_3d,"difftemp_xs_3_T1_3d")
-hf.p_vec(xs_3.T2,"xs_3.T2")
-hf.print_4x4_matrix(sketch_xs3.Placement.Matrix,"xs3_placement")
-#sketch_xs3.addGeometry(Part.LineSegment(temp_xs_3_T1_3d,temp_xs_3_T1_xy_3d))
-#end checking
 print("\nThe end\n")
 
 def main():

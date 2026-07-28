@@ -418,7 +418,7 @@ def build():
     # --- 3D BSplines ---
     bc_3d_edge_list = []
 
-    bc_3d_heel = bspline_to_3dyz_from_2dxy(control_curves.heel_profile)
+    bc_3d_heel = bspline_to_3dyz_from_2dxy(control_curves.Heel_profile)
     bc_3d_edge_list.append(bc_3d_heel)
 
     bc_3d_bottom = bspline_to_3dyz_from_2dxy(control_curves.H_profile)
@@ -457,7 +457,7 @@ def build():
     ]
 
     # --- Heel near row: bc_3d_heel sampled at intermediate t values ---
-    # Bows to heel_profile shape rather than being a parallel slice like xs_0.
+    # Bows to Heel_profile shape rather than being a parallel slice like xs_0.
     _t_c, _t_m, _t_h = 0.15, 0.30, 0.92
     _p_c = bc_3d_heel.value(_t_c)
     _p_m = bc_3d_heel.value(_t_m)

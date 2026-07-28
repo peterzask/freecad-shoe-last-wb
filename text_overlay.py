@@ -12,6 +12,54 @@ importlib.reload(hf) #helper_funcs)
 # To hide, select TextGroups in tree and hit spacebar.
 # Only run if user executes this.
 
+def control_curve_text(poles:list[App.Vector], normal:App.Vector, height:float, sketch):
+    if not sketch:
+        print(f"text_overlay error: Sketch not open")
+        return
+    doc = sketch.Document
+    cct_name = "control_curve_text"
+    existing = doc.getObject(cct_name)
+    if existing:
+        # removeObject() only deletes the group container, not its
+        # ShapeString children — remove those first or they orphan and
+        # pile up on every re-run.
+        for child in existing.Group:
+            doc.removeObject(child.Name)
+        doc.removeObject(cct_name)
+    group_shapestring_container = doc.addObject("App::DocumentObjectGroup", cct_name)
+
+    import os as _os
+    font_path = _os.path.expanduser("~/.local/share/fonts/FreeSansBold.ttf")
+    if not _os.path.exists(font_path):
+        font_path = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
+
+    # build text
+    for j, p in enumerate(poles):
+        if normal.z == 1.0:
+            label_pt = p + App.Vector(1,1,0)
+        else:
+            label_pt = p + App.Vector(1,0,1)
+        ss_obj = Draft.make_shapestring(
+                String = f"{j}",
+                FontFile = font_path,
+                Size = height,
+                Tracking = 0.0)
+        ss_obj.Placement = App.Placement(
+            sketch.Placement.multVec(label_pt), sketch.Placement.Rotation)
+        group_shapestring_container.addObject(ss_obj)
+
+
+
+
+
+
+
+
+
+
+
+
+
 def main():
     doc = App.ActiveDocument
     if doc is None:
